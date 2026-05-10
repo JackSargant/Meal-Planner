@@ -814,6 +814,8 @@ function getPalette(meal) {
 }
 
 // ── State ──────────────────────────────────────────────────────────────────
+let demoMode = false;
+let demoLikes = [];
 let meals = [];
 let sessionId = null;
 let mySlot = null;
@@ -852,6 +854,20 @@ async function init() {
   if (params.get('s')) {
     document.getElementById('join-code').value = params.get('s').toUpperCase();
     setTimeout(() => document.getElementById('join-name').focus(), 100);
+  }
+  if (params.get('demo') !== null) {
+    demoMode = true;
+    demoLikes = [];
+    currentRound = 'dinner';
+    mealQueue = shuffle(dinnerMeals()).map(m => m.id);
+    swipeIndex = 0;
+    sessionData = { targets: { lunch: 1, dinner: 6 } };
+    updateRoundUI();
+    showSwipeUI();
+    showScreen('screen-swipe');
+    renderCard();
+    document.getElementById('partner-status').innerHTML = '<em>DEMO MODE</em> · no data will be saved';
+    return;
   }
   checkSavedWeek();
   showScreen('screen-lobby');
@@ -1194,6 +1210,17 @@ async function doSwipe(direction) {
     card.style.opacity = '0';
   }
 
+  if (demoMode) {
+    if (liked) demoLikes.push(mealId);
+    swipeIndex++;
+    if (swipeIndex >= mealQueue.length) {
+      setTimeout(() => showDemoResults(), 350);
+    } else {
+      setTimeout(() => { swiping = false; curDragX = 0; curDragY = 0; renderCard(); }, 340);
+    }
+    return;
+  }
+
   const swipesField = `${mySlot}.${currentRound}Swipes.${mealId}`;
   const matchesField = `${currentRound}Matches`;
   const updates = { [swipesField]: liked };
@@ -1204,6 +1231,20 @@ async function doSwipe(direction) {
   }
   await updateDoc(sessionRef(), updates);
   setTimeout(() => { swiping = false; curDragX = 0; curDragY = 0; renderCard(); }, 340);
+}
+
+function showDemoResults() {
+  showScreen('screen-results');
+  document.getElementById('results-sub').textContent = `${demoLikes.length} liked · demo mode`;
+  const el = document.getElementById('results-meals');
+  el.innerHTML = '';
+  const h = document.createElement('div'); h.className = 'results-round-title'; h.textContent = '🍽️ Your picks'; el.appendChild(h);
+  if (demoLikes.length) {
+    appendResultGroup(el, demoLikes, 'matched');
+  } else {
+    el.insertAdjacentHTML('beforeend', '<div class="empty" style="margin-top:8px"><div class="empty-bubble"></div><div class="empty-text">No likes this run.</div></div>');
+  }
+  document.getElementById('shopping-wrap').style.display = 'none';
 }
 
 document.getElementById('btn-like').addEventListener('click', () => doSwipe('like'));
@@ -1337,6 +1378,7 @@ document.getElementById('btn-copy-shopping').addEventListener('click', () => {
 // ── New week ──────────────────────────────────────────────────────────────
 document.getElementById('btn-new-week').addEventListener('click', () => {
   if (unsub) unsub();
+  demoMode = false; demoLikes = [];
   sessionId = null; mySlot = null; sessionData = null; currentRound = 'lunch';
   mealQueue = []; swipeIndex = 0; knownLunchMatches = new Set(); knownDinnerMatches = new Set();
   swiping = false; shoppingOpen = false;
