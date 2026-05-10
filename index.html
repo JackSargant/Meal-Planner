@@ -2,234 +2,533 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Meal Planner</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Pair · Meal Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424; --border: #2e2e2e;
-  --accent: #c8f04a; --accent2: #f0a84a; --text: #f0ede8; --muted: #888; --red: #e05a5a;
+  --bg:         oklch(0.16 0.008 250);
+  --bg-elev-1:  oklch(0.20 0.008 250);
+  --bg-elev-2:  oklch(0.24 0.008 250);
+  --bg-elev-3:  oklch(0.28 0.008 250);
+  --ink:        oklch(0.98 0.005 250);
+  --ink-2:      oklch(0.78 0.008 250);
+  --ink-3:      oklch(0.58 0.008 250);
+  --ink-4:      oklch(0.40 0.008 250);
+  --line:       oklch(0.30 0.008 250 / .6);
+  --line-2:     oklch(0.30 0.008 250 / .3);
+  --accent:     oklch(0.84 0.17 85);
+  --accent-ink: #1a1408;
+  --danger:     oklch(0.66 0.18 25);
+  --font-sans:  "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:  "Geist Mono", ui-monospace, "SF Mono", monospace;
+  --font-serif: "Instrument Serif", "Times New Roman", serif;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 22px; --r-xl: 32px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
-.screen { display: none; min-height: 100vh; flex-direction: column; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01","cv11";
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button { font-family: inherit; cursor: pointer; }
+
+/* ── App shell ── */
+.app {
+  display: flex; flex-direction: column;
+  height: 100dvh;
+  max-width: 460px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: 600px) {
+  body {
+    background: radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.22 0.01 250) 0%, transparent 60%), var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh;
+  }
+  .app {
+    height: 920px;
+    border-radius: 28px;
+    box-shadow: 0 0 0 1px var(--line), 0 40px 80px -20px rgba(0,0,0,.6);
+  }
+}
+
+/* ── Screens ── */
+.screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .screen.active { display: flex; }
 
-/* Loading */
-.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; }
-.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── Top bar ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 12px;
+  flex-shrink: 0;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: radial-gradient(60% 60% at 30% 30%, oklch(from var(--accent) l c h / .85) 0%, transparent 70%), var(--bg-elev-2);
+  border: .5px solid var(--line);
+  display: grid; place-items: center;
+}
+.brand-mark span { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px oklch(from var(--accent) l c h / .6); }
+.brand-name { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; line-height: 1; }
+.brand-sub { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 3px; letter-spacing: 0.04em; }
+.presence { display: flex; align-items: center; gap: 6px; position: relative; }
+.avatar {
+  border-radius: 50%; display: grid; place-items: center;
+  color: var(--ink); font-weight: 600; font-size: 11px;
+  border: .5px solid var(--line); background: var(--bg-elev-2);
+  text-transform: uppercase;
+  width: 28px; height: 28px;
+}
+.presence .avatar:nth-child(2) { margin-left: -10px; }
+.presence-dot {
+  position: absolute; right: -2px; bottom: -2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: oklch(0.78 0.16 145); border: 2px solid var(--bg);
+}
 
-/* Lobby */
-.lobby-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 24px; gap: 24px; }
-.logo { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--accent); letter-spacing: -0.02em; text-align: center; }
-.logo-sub { color: var(--muted); font-size: 0.88rem; text-align: center; margin-top: -16px; }
-.lobby-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; }
-.lobby-card h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 400; }
-.lobby-card p { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
-.divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.78rem; max-width: 400px; width: 100%; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.lobby-footer { display: flex; justify-content: center; }
+/* ── Scrollable main ── */
+.main { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; position: relative; }
+.main::-webkit-scrollbar { display: none; }
+.view { padding: 0 20px 28px; }
+
+/* ── Buttons ── */
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  appearance: none; border: 0; width: 100%;
+  height: 48px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-weight: 600; font-size: 14px;
+  transition: transform .15s, filter .15s;
+}
+.btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.btn-secondary {
+  display: flex; align-items: center; justify-content: center;
+  appearance: none; width: 100%; height: 44px; border-radius: 999px;
+  border: .5px solid var(--line); background: transparent;
+  color: var(--ink); font-size: 14px;
+  transition: border-color .15s, color .15s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-ghost {
+  appearance: none; border: 0; background: transparent;
+  color: var(--ink-3); font-size: 13px; font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  transition: color .15s;
+}
+.btn-ghost:hover { color: var(--ink); }
+.btn-danger {
+  appearance: none; border: .5px solid var(--line); background: transparent;
+  color: var(--ink-3); border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; transition: all .15s;
+}
+.btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-sm {
+  appearance: none; border: .5px solid var(--line); background: transparent;
+  color: var(--ink-3); border-radius: 999px; padding: 5px 12px;
+  font-size: 12px; font-family: var(--font-sans); transition: all .15s;
+}
+.btn-sm:hover { border-color: var(--ink-2); color: var(--ink); }
+
+/* ── Inputs ── */
+input[type="text"], textarea {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg-elev-2); border: .5px solid var(--line);
+  border-radius: var(--r-sm); color: var(--ink);
+  font-family: var(--font-sans); font-size: 14px; outline: none;
+  transition: border-color .2s;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+input[type="text"]::placeholder, textarea::placeholder { color: var(--ink-4); }
+textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: vertical; }
+
+/* ── Loading ── */
+#screen-loading { align-items: center; justify-content: center; gap: 20px; }
+.loading-brand { font-family: var(--font-serif); font-size: 28px; letter-spacing: -0.02em; color: var(--accent); }
+.spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-sub { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; }
+
+/* ── Lobby ── */
+.lobby-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 8px 20px 40px; display: flex; flex-direction: column; gap: 14px; }
+.lobby-scroll::-webkit-scrollbar { display: none; }
+.lobby-hero { padding: 24px 0 8px; }
+.lobby-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 10px; }
+.lobby-title { font-family: var(--font-serif); font-size: 48px; line-height: 0.96; letter-spacing: -0.02em; margin-bottom: 8px; }
+.lobby-title em { font-style: italic; color: var(--accent); }
+.lobby-sub { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.lobby-card {
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: var(--r-lg); padding: 22px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.lobby-card-title { font-family: var(--font-serif); font-size: 22px; letter-spacing: -0.01em; }
+.lobby-card-sub { font-size: 13px; color: var(--ink-3); line-height: 1.5; margin-top: -4px; }
+.lobby-divider {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.08em;
+}
+.lobby-divider::before, .lobby-divider::after { content: ''; flex: 1; height: .5px; background: var(--line); }
+.lobby-footer { display: flex; justify-content: center; padding-top: 4px; }
+
+/* This week card */
+.this-week-card { border-color: oklch(from var(--accent) l c h / .5); background: oklch(from var(--accent) 0.14 0.02 85); }
 
 /* Target counters */
-.targets-wrap { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+.targets-wrap { display: flex; flex-direction: column; gap: 8px; }
 .target-row { display: flex; align-items: center; justify-content: space-between; }
-.target-label { font-size: 0.88rem; color: var(--text); }
+.target-label { font-size: 13px; color: var(--ink-2); }
 .counter { display: flex; align-items: center; gap: 14px; }
-.counter-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.counter-btn:hover { border-color: var(--accent); color: var(--accent); }
-.counter-val { font-size: 1.05rem; font-weight: 500; min-width: 20px; text-align: center; color: var(--accent); }
-.targets-divider { height: 1px; background: var(--border); }
-
-/* Inputs & Buttons */
-input[type="text"] { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
-input[type="text"]:focus { border-color: var(--accent); }
-input[type="text"]::placeholder { color: var(--muted); }
-textarea { width: 100%; min-height: 220px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; color: var(--text); font-family: monospace; font-size: 0.8rem; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.2s; }
-textarea:focus { border-color: var(--accent); }
-textarea::placeholder { color: var(--muted); }
-.btn-primary { width: 100%; padding: 13px; background: var(--accent); color: #0f0f0f; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
-.btn-primary:hover { opacity: 0.85; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-secondary { width: 100%; padding: 11px; background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-.btn-ghost { background: none; border: none; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 0; transition: color 0.2s; }
-.btn-ghost:hover { color: var(--text); }
-.btn-danger { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
-.btn-danger:hover { border-color: var(--red); color: var(--red); }
-
-/* Waiting */
-.waiting-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 24px; gap: 20px; text-align: center; }
-.waiting-icon { font-size: 3rem; animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-.waiting-wrap h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; }
-.waiting-wrap p { color: var(--muted); font-size: 0.88rem; }
-.share-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
-.share-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-.share-code { font-family: monospace; font-size: 2.2rem; letter-spacing: 0.25em; color: var(--accent); text-align: center; }
-.share-url { font-size: 0.72rem; color: var(--muted); word-break: break-all; text-align: center; }
-
-/* Swipe */
-.swipe-header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px; }
-.logo-sm { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--accent); }
-.round-pill { font-size: 0.75rem; font-weight: 500; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); white-space: nowrap; }
-.round-pill.lunch { border-color: #6a4faa; color: #c4a0ff; background: #1a1026; }
-.round-pill.dinner { border-color: #4a6a1a; color: var(--accent); background: #111a08; }
-.match-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.match-badge .count { color: var(--accent); font-weight: 600; }
-.btn-recipe-sm { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
-.btn-recipe-sm:hover { border-color: var(--muted); color: var(--text); }
-.partner-status { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 8px 20px; min-height: 30px; flex-shrink: 0; }
-.partner-status span { color: var(--accent2); }
-.card-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 24px 0; }
-.card-stack { position: relative; width: min(340px, 88vw); height: min(400px, 54vh); }
-.swipe-card { position: absolute; inset: 0; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; user-select: none; touch-action: none; }
-.swipe-card.top { z-index: 2; cursor: grab; }
-.swipe-card.top:active { cursor: grabbing; }
-.swipe-card.behind { z-index: 1; transform: scale(0.95) translateY(10px); transition: transform 0.3s ease; pointer-events: none; }
-.swipe-card.exit-left { transition: transform 0.32s ease, opacity 0.32s ease; transform: translateX(-130%) rotate(-18deg) !important; opacity: 0; }
-.swipe-card.exit-right { transition: transform 0.32s ease, opacity 0.32s ease; transform: translateX(130%) rotate(18deg) !important; opacity: 0; }
-.swipe-card.new-top { animation: popIn 0.25s ease; }
-@keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-.like-stamp { position: absolute; top: 22px; left: 20px; border: 3px solid var(--accent); border-radius: 6px; padding: 3px 10px; font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; opacity: 0; transform: rotate(-12deg); pointer-events: none; }
-.nope-stamp { position: absolute; top: 22px; right: 20px; border: 3px solid var(--red); border-radius: 6px; padding: 3px 10px; font-size: 1rem; font-weight: 700; color: var(--red); letter-spacing: 0.05em; opacity: 0; transform: rotate(12deg); pointer-events: none; }
-.card-type-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; }
-.tag-lunch { background: #2a1f3d; color: #c4a0ff; }
-.tag-dinner { background: #1f2d1f; color: #c8f04a; }
-.card-name { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 400; line-height: 1.25; margin-bottom: 7px; }
-.card-protein { font-size: 0.78rem; color: var(--muted); }
-.card-protein span { color: var(--accent2); }
-.card-preview { font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
-.progress-wrap { width: min(340px, 88vw); height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 14px; }
-.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
-.swipe-actions { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 20px; flex-shrink: 0; }
-.btn-dislike, .btn-like { width: 64px; height: 64px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; background: var(--surface); transition: all 0.18s; }
-.btn-dislike { border-color: var(--red); color: var(--red); }
-.btn-dislike:hover { background: var(--red); color: #fff; transform: scale(1.06); }
-.btn-like { border-color: var(--accent); color: var(--accent); }
-.btn-like:hover { background: var(--accent); color: #0f0f0f; transform: scale(1.06); }
-
-/* Between rounds / all done panels */
-.mid-panel { display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px 24px; gap: 14px; }
-.mid-panel h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; }
-.mid-panel p { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
-.mid-panel .big-emoji { font-size: 3rem; }
-
-/* Match toast */
-.match-toast { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.match-toast-inner { background: var(--surface); border: 2px solid var(--accent); border-radius: 20px; padding: 28px 36px; text-align: center; transform: scale(0); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 60px rgba(200,240,74,0.15); }
-.match-toast-inner.show { transform: scale(1); }
-.match-emoji { font-size: 2.2rem; margin-bottom: 6px; }
-.match-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--accent); }
-.match-meal-name { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
-
-/* Results */
-.results-wrap { padding: 32px 24px 60px; max-width: 680px; margin: 0 auto; width: 100%; }
-.results-wrap h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; margin-bottom: 4px; }
-.results-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
-.results-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
-.results-actions .btn-primary, .results-actions .btn-secondary { width: auto; padding: 10px 20px; }
-.results-round-heading { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; margin-top: 28px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.result-section-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; margin-top: 14px; }
-.result-meal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
-.result-meal:hover { border-color: #444; }
-.result-meal.matched { border-color: var(--accent); background: #1b2210; }
-.result-meal.auto { border-color: var(--accent2); background: #1e1a10; }
-.result-meal-info { flex: 1; }
-.result-meal-name { font-family: 'Playfair Display', serif; font-size: 0.98rem; margin-bottom: 2px; }
-.result-meal-meta { font-size: 0.74rem; color: var(--muted); }
-.result-badge { font-size: 0.64rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
-.badge-match { background: #1e2d10; color: var(--accent); border: 1px solid #3a5a1a; }
-.badge-auto { background: #2d1e10; color: var(--accent2); border: 1px solid #5a3a1a; }
-.shopping-wrap { margin-top: 28px; }
-.shopping-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.shopping-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; }
-.shopping-section { margin-bottom: 24px; }
-.shopping-section-title { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.shopping-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1e1e1e; font-size: 0.88rem; cursor: pointer; transition: opacity 0.2s; }
-.shopping-item.checked { opacity: 0.4; text-decoration: line-through; }
-.shopping-item input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; flex-shrink: 0; position: relative; transition: all 0.15s; }
-.shopping-item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
-.shopping-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 12px; color: #0f0f0f; font-weight: 700; }
-.item-name { flex: 1; }
-.item-amount { color: var(--accent); font-size: 0.8rem; font-weight: 500; }
-
-/* Meals management */
-.mgmt-wrap { padding: 28px 24px 60px; max-width: 680px; margin: 0 auto; width: 100%; }
-.mgmt-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
-.mgmt-header h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; }
-.meal-row { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-.meal-row-info { flex: 1; }
-.meal-row-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; margin-bottom: 2px; }
-.meal-row-meta { font-size: 0.74rem; color: var(--muted); }
-.import-feedback { padding: 12px 16px; border-radius: 8px; font-size: 0.84rem; margin-bottom: 12px; display: none; }
-.import-feedback.success { background: #1e2d10; border: 1px solid #3a5a1a; color: var(--accent); }
-.import-feedback.error { background: #2d1010; border: 1px solid #5a1a1a; color: var(--red); }
-.template-box { margin-top: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-.template-title { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-.template-code { background: var(--surface2); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.74rem; color: #aaa; line-height: 1.8; white-space: pre-wrap; overflow-x: auto; }
-.section-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 28px; display: block; }
-
-/* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 300; align-items: center; justify-content: center; padding: 24px; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; max-width: 580px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative; animation: slideUp 0.25s ease; }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.modal-close:hover { background: var(--border); color: var(--text); }
-.modal-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; margin: 8px 0 4px; }
-.modal-protein { color: var(--accent2); font-size: 0.85rem; margin-bottom: 20px; }
-.modal-section-title { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-.ingredients-list { list-style: none; margin-bottom: 20px; }
-.ingredients-list li { padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center; }
-.ingredients-list li:last-child { border-bottom: none; }
-.ing-amount { color: var(--accent); font-weight: 500; font-size: 0.8rem; white-space: nowrap; margin-left: 12px; }
-.steps-list { list-style: none; }
-.steps-list li { display: flex; gap: 12px; padding: 8px 0; font-size: 0.86rem; line-height: 1.6; border-bottom: 1px solid var(--border); }
-.steps-list li:last-child { border-bottom: none; }
-.step-num { color: var(--accent); font-family: 'Playfair Display', serif; font-size: 1rem; min-width: 20px; font-weight: 700; }
-
-@media (max-width: 480px) {
-  .lobby-card { padding: 22px; }
-  .swipe-actions { gap: 20px; }
-  .modal { padding: 20px; border-radius: 18px 18px 0 0; max-height: 90vh; }
-  .modal-overlay { align-items: flex-end; padding: 0; }
-  .results-wrap, .mgmt-wrap { padding: 20px 16px 50px; }
+.counter-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: .5px solid var(--line); background: var(--bg-elev-2);
+  color: var(--ink); font-size: 16px; line-height: 1;
+  display: grid; place-items: center; transition: all .15s;
 }
+.counter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.counter-val { font-family: var(--font-mono); font-size: 16px; min-width: 24px; text-align: center; color: var(--accent); }
+.targets-sep { height: .5px; background: var(--line); margin: 2px 0; }
+
+/* ── Waiting screen ── */
+#screen-waiting { align-items: center; justify-content: center; padding: 32px 24px; gap: 28px; text-align: center; }
+.waiting-pulse { font-size: 3rem; animation: breathe 2s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.waiting-title { font-family: var(--font-serif); font-size: 32px; letter-spacing: -0.02em; line-height: 1.05; }
+.waiting-sub { font-size: 14px; color: var(--ink-3); }
+.share-box {
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: var(--r-lg); padding: 24px;
+  width: 100%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 12px; align-self: center;
+}
+.share-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-3); text-transform: uppercase; }
+.share-code { font-family: var(--font-serif); font-size: 48px; letter-spacing: 0.12em; color: var(--accent); text-align: center; }
+.share-url { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); word-break: break-all; text-align: center; }
+
+/* ── Swipe screen ── */
+#screen-swipe { position: relative; }
+.swipe-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px; flex-shrink: 0;
+  border-bottom: .5px solid var(--line);
+}
+.round-pill {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+  padding: 6px 14px; border-radius: 999px; border: .5px solid var(--line);
+  background: var(--bg-elev-2); color: var(--ink-2);
+}
+.round-pill.lunch { border-color: oklch(0.60 0.12 295 / .6); color: oklch(0.78 0.12 295); background: oklch(0.20 0.04 295); }
+.round-pill.dinner { border-color: oklch(from var(--accent) l c h / .4); color: var(--accent); background: oklch(from var(--accent) 0.18 0.04 85); }
+.match-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-2);
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: 999px; padding: 6px 12px;
+}
+.match-badge .count { color: var(--accent); font-weight: 500; }
+.partner-bar {
+  text-align: center; font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-4); letter-spacing: 0.06em;
+  padding: 8px 20px; flex-shrink: 0;
+}
+.partner-bar em { color: var(--accent); font-style: normal; }
+
+/* Deck */
+.swipe-main { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.deck-meta {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px 4px; flex-shrink: 0;
+}
+.deck-count { font-family: var(--font-serif); font-size: 22px; line-height: 1; }
+.deck-count-total { color: var(--ink-4); font-size: 14px; }
+.deck-progress { flex: 1; height: 2px; background: var(--bg-elev-2); border-radius: 999px; overflow: hidden; }
+.deck-progress-fill { height: 100%; background: var(--accent); transition: width .35s cubic-bezier(.4,0,.2,1); }
+.deck-area { flex: 1; min-height: 0; padding: 8px 20px 0; display: flex; flex-direction: column; }
+.deck-stack {
+  position: relative; flex: 1; min-height: 0;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+}
+.deck-slot { position: absolute; inset: 0; will-change: transform; }
+.deck-slot-1 { z-index: 3; cursor: grab; }
+.deck-slot-1:active { cursor: grabbing; }
+.deck-slot-2 { z-index: 2; transform: scale(0.94) translateY(12px); opacity: .8; pointer-events: none; transition: transform .25s, opacity .25s; }
+.deck-slot-3 { z-index: 1; transform: scale(0.88) translateY(24px); opacity: .5; pointer-events: none; transition: transform .25s, opacity .25s; }
+
+/* Meal card */
+.mc-card {
+  height: 100%; border-radius: var(--r-lg);
+  background: var(--bg-elev-2); border: .5px solid var(--line);
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 18px 40px -16px rgba(0,0,0,.6);
+}
+.mc-art {
+  flex: 1; position: relative; overflow: hidden;
+  padding: 22px; display: flex; flex-direction: column; justify-content: space-between;
+}
+.mc-grain {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,.05), transparent 50%);
+}
+.mc-art-meta {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.12em; color: rgba(255,255,255,.7);
+  position: relative; z-index: 1;
+}
+.mc-art-title {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400;
+  line-height: 0.9; letter-spacing: -0.025em;
+  position: relative; z-index: 1;
+  text-shadow: 0 2px 24px rgba(0,0,0,.3);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mc-foot {
+  background: var(--bg-elev-1); border-top: .5px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 14px 18px;
+}
+.mc-foot-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 3px; }
+.mc-foot-value { font-size: 14px; font-weight: 500; }
+.mc-note { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-align: right; letter-spacing: 0.04em; max-width: 55%; }
+
+/* Stamps */
+.deck-stamp {
+  position: absolute; font-family: var(--font-mono); font-size: 20px;
+  font-weight: 500; letter-spacing: 0.18em; padding: 5px 12px;
+  border-radius: 6px; border: 2px solid currentColor;
+  pointer-events: none; transition: opacity .1s linear; top: 24px; z-index: 5;
+}
+.deck-stamp-yes { left: 20px; color: oklch(0.82 0.16 145); transform: rotate(-12deg); }
+.deck-stamp-no  { right: 20px; color: oklch(0.72 0.16 25); transform: rotate(12deg); }
+
+/* Deck actions */
+.deck-actions {
+  display: flex; justify-content: center; gap: 22px;
+  padding: 16px 20px 8px; flex-shrink: 0;
+}
+.deck-btn {
+  width: 62px; height: 62px; border-radius: 50%;
+  border: .5px solid var(--line); background: var(--bg-elev-2);
+  color: var(--ink); display: grid; place-items: center;
+  transition: transform .12s, background .15s, color .15s, border-color .15s;
+}
+.deck-btn:hover { transform: translateY(-2px); }
+.deck-btn:active { transform: scale(0.95); }
+.deck-btn-no:hover { color: oklch(0.72 0.16 25); border-color: oklch(0.72 0.16 25 / .5); }
+.deck-btn-yes { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.deck-btn-yes:hover { filter: brightness(1.1); }
+.deck-hint { text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 0 16px; flex-shrink: 0; }
+
+/* Mid panels */
+.mid-panel {
+  position: absolute; inset: 0; z-index: 20;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px 24px; gap: 16px;
+  background: var(--bg);
+}
+.mid-panel.visible { display: flex; }
+.mid-panel-emoji { font-size: 3rem; }
+.mid-panel-title { font-family: var(--font-serif); font-size: 32px; letter-spacing: -0.02em; }
+.mid-panel-sub { font-size: 14px; color: var(--ink-3); line-height: 1.6; max-width: 28ch; }
+
+/* Done */
+.deck-done-wrap { flex: 1; display: grid; place-items: center; }
+.deck-done-card { text-align: center; }
+.deck-done-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 8px; }
+.deck-done-title { font-family: var(--font-serif); font-size: 32px; }
+
+/* ── Results ── */
+.results-view { padding: 0 20px 40px; }
+.results-head { padding: 20px 0 16px; }
+.results-eyebrow { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 10px; }
+.results-title { font-family: var(--font-serif); font-size: 44px; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; }
+.results-sub { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+.results-actions { display: flex; gap: 10px; margin: 20px 0; }
+.results-actions .btn-primary, .results-actions .btn-secondary { width: auto; padding: 0 20px; }
+.results-round { margin-bottom: 8px; }
+.results-round-title { font-family: var(--font-serif); font-size: 24px; letter-spacing: -0.01em; padding: 18px 0 10px; border-bottom: .5px solid var(--line); margin-bottom: 12px; }
+.result-section-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin: 12px 0 8px; }
+.result-meal {
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: border-color .15s;
+}
+.result-meal:hover { border-color: var(--ink-3); }
+.result-meal.matched { border-color: oklch(from var(--accent) l c h / .5); background: oklch(from var(--accent) 0.14 0.02 85); }
+.result-meal.auto { border-color: oklch(0.72 0.14 60 / .5); background: oklch(0.16 0.02 60); }
+.result-meal-info { flex: 1; }
+.result-meal-name { font-family: var(--font-serif); font-size: 16px; margin-bottom: 2px; }
+.result-meal-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em; }
+.result-badge { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; padding: 4px 8px; border-radius: 999px; flex-shrink: 0; }
+.badge-match { background: oklch(from var(--accent) 0.18 0.05 85); color: var(--accent); }
+.badge-auto  { background: oklch(0.18 0.03 60); color: oklch(0.78 0.12 60); }
+
+/* Shopping list */
+.shopping-wrap { margin-top: 24px; }
+.shopping-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.shopping-title { font-family: var(--font-serif); font-size: 24px; }
+.shopping-section { margin-bottom: 20px; }
+.shopping-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; padding-bottom: 8px; border-bottom: .5px solid var(--line); }
+.shopping-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: .5px solid var(--line-2); font-size: 13px; cursor: pointer; transition: opacity .2s; }
+.shopping-item.checked { opacity: .4; text-decoration: line-through; }
+.shopping-item input[type="checkbox"] {
+  appearance: none; width: 18px; height: 18px;
+  border: .5px solid var(--line); border-radius: 5px; flex-shrink: 0;
+  position: relative; transition: all .15s; cursor: pointer;
+}
+.shopping-item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+.shopping-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 11px; color: var(--accent-ink); font-weight: 700; }
+.item-name { flex: 1; }
+.item-amount { font-family: var(--font-mono); font-size: 11px; color: var(--accent); }
+
+/* ── Meals management ── */
+.mgmt-view { padding: 0 20px 40px; }
+.mgmt-head { display: flex; align-items: center; gap: 14px; padding: 18px 0 20px; }
+.mgmt-title { font-family: var(--font-serif); font-size: 32px; letter-spacing: -0.01em; flex: 1; }
+.section-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 12px; margin-top: 24px; }
+.meal-row {
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+}
+.meal-row-info { flex: 1; }
+.meal-row-name { font-family: var(--font-serif); font-size: 15px; margin-bottom: 2px; }
+.meal-row-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em; }
+.import-feedback { padding: 12px 16px; border-radius: var(--r-sm); font-size: 13px; margin-bottom: 12px; display: none; }
+.import-feedback.success { background: oklch(from var(--accent) 0.14 0.02 85); border: .5px solid oklch(from var(--accent) l c h / .4); color: var(--accent); }
+.import-feedback.error   { background: oklch(0.16 0.03 25); border: .5px solid oklch(var(--danger) / .4); color: var(--danger); }
+.template-box { margin-top: 24px; background: var(--bg-elev-1); border: .5px solid var(--line); border-radius: var(--r-md); padding: 18px; }
+.template-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+.template-code { background: var(--bg-elev-2); border-radius: var(--r-sm); padding: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); line-height: 1.8; white-space: pre-wrap; overflow-x: auto; }
+
+/* ── Modal ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 300; align-items: flex-end; justify-content: center; padding: 0; }
+.modal-overlay.open { display: flex; }
+@media (min-width: 600px) { .modal-overlay { align-items: center; padding: 24px; } }
+.modal {
+  background: var(--bg-elev-1); border: .5px solid var(--line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  max-height: 88vh; overflow-y: auto;
+  padding: 28px; width: 100%; position: relative;
+  animation: slideUp .25s cubic-bezier(.2,.8,.2,1);
+  scrollbar-width: none;
+}
+.modal::-webkit-scrollbar { display: none; }
+@media (min-width: 600px) { .modal { max-width: 480px; border-radius: var(--r-lg); } }
+@keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--bg-elev-2); border: .5px solid var(--line);
+  color: var(--ink-3); width: 30px; height: 30px; border-radius: 50%;
+  font-size: 14px; display: grid; place-items: center; transition: all .15s;
+}
+.modal-close:hover { color: var(--ink); }
+.modal-type-tag {
+  display: inline-block; font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+}
+.tag-lunch  { background: oklch(0.20 0.04 295); color: oklch(0.78 0.12 295); }
+.tag-dinner { background: oklch(from var(--accent) 0.18 0.04 85); color: var(--accent); }
+.modal-title { font-family: var(--font-serif); font-size: 28px; letter-spacing: -0.015em; margin-bottom: 4px; line-height: 1.1; }
+.modal-protein { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; margin-bottom: 22px; }
+.modal-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; padding-bottom: 8px; border-bottom: .5px solid var(--line); }
+.ingredients-list { list-style: none; margin-bottom: 22px; }
+.ingredients-list li { padding: 9px 0; border-bottom: .5px solid var(--line-2); font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+.ingredients-list li:last-child { border-bottom: none; }
+.ing-amount { font-family: var(--font-mono); font-size: 11px; color: var(--accent); white-space: nowrap; margin-left: 12px; }
+.steps-list { list-style: none; }
+.steps-list li { display: flex; gap: 14px; padding: 10px 0; font-size: 13px; line-height: 1.6; border-bottom: .5px solid var(--line-2); color: var(--ink-2); }
+.steps-list li:last-child { border-bottom: none; }
+.step-num { font-family: var(--font-serif); font-size: 18px; color: var(--accent); min-width: 20px; flex-shrink: 0; line-height: 1.4; }
+
+/* ── Match toast ── */
+.match-toast-wrap {
+  position: absolute; inset: 0; z-index: 50;
+  display: flex; align-items: flex-end; justify-content: stretch;
+  padding: 0 20px 100px; pointer-events: none;
+}
+.match-toast {
+  width: 100%;
+  background: var(--bg-elev-3); border: .5px solid var(--line);
+  border-radius: var(--r-md); padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,.6);
+  transform: translateY(20px); opacity: 0;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s;
+}
+.match-toast.show { transform: translateY(0); opacity: 1; }
+.match-toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 10px currentColor; background: var(--accent); }
+.match-toast-text { flex: 1; min-width: 0; }
+.match-toast-eyebrow { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; color: var(--accent); display: block; }
+.match-toast-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Empty state ── */
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 28px 12px; background: var(--bg-elev-1); border: .5px dashed var(--line); border-radius: var(--r-md); }
+.empty-bubble { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev-2); margin-bottom: 10px; }
+.empty-text { color: var(--ink-3); font-size: 13px; }
 </style>
 </head>
 <body>
+<div class="app">
 
 <!-- Loading -->
-<div id="screen-loading" class="screen active">
-  <div class="loading-wrap">
-    <div class="logo">🥦 Meal Planner</div>
-    <div class="spinner"></div>
-    <div style="color:var(--muted);font-size:0.85rem">Loading meals...</div>
-  </div>
+<div id="screen-loading" class="screen active" style="align-items:center;justify-content:center;gap:20px">
+  <div class="loading-brand">Pair</div>
+  <div class="spinner"></div>
+  <div class="loading-sub">LOADING MEALS</div>
 </div>
 
 <!-- Lobby -->
 <div id="screen-lobby" class="screen">
-  <div class="lobby-wrap">
-    <div>
-      <div class="logo">🥦 Meal Planner</div>
-      <div class="logo-sub">Pick your meals together</div>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <div><div class="brand-name">Pair</div><div class="brand-sub">MEAL PLANNER</div></div>
     </div>
-    <div id="this-week-card" class="lobby-card" style="display:none;border-color:var(--accent);background:#1b2210">
-      <h2>This week</h2>
-      <p id="this-week-desc" style="color:var(--muted)"></p>
-      <button class="btn-primary" id="btn-view-this-week">View this week →</button>
+  </div>
+  <div class="lobby-scroll">
+    <div class="lobby-hero">
+      <div class="lobby-eyebrow">THIS WEEK</div>
+      <h1 class="lobby-title">What are <em>we</em><br>cooking?</h1>
+      <p class="lobby-sub">You both swipe. Whatever you both want — that's dinner.</p>
+    </div>
+
+    <!-- This week resume card (hidden by default) -->
+    <div id="this-week-card" class="lobby-card this-week-card" style="display:none">
+      <div class="lobby-card-title">This week</div>
+      <p id="this-week-desc" class="lobby-card-sub"></p>
+      <button class="btn-primary" id="btn-view-this-week">View this week</button>
       <button class="btn-ghost" id="btn-clear-this-week" style="text-align:center">Clear saved week</button>
     </div>
+
+    <!-- Create session -->
     <div class="lobby-card">
-      <h2>Start a new week</h2>
-      <p>You'll both swipe through meals and get matched on ones you both love.</p>
+      <div class="lobby-card-title">Start a new week</div>
+      <p class="lobby-card-sub">You'll swipe through meals together and match on ones you both love.</p>
       <input type="text" id="create-name" placeholder="Your name" maxlength="20">
-      <div class="targets-divider"></div>
+      <div class="targets-sep"></div>
       <div class="targets-wrap">
         <div class="target-row">
-          <span class="target-label">🥗 Lunches this week</span>
+          <span class="target-label">Lunches this week</span>
           <div class="counter">
             <button class="counter-btn" id="lunch-minus">−</button>
             <span class="counter-val" id="target-lunch-val">1</span>
@@ -237,7 +536,7 @@ textarea::placeholder { color: var(--muted); }
           </div>
         </div>
         <div class="target-row">
-          <span class="target-label">🍽️ Dinners this week</span>
+          <span class="target-label">Dinners this week</span>
           <div class="counter">
             <button class="counter-btn" id="dinner-minus">−</button>
             <span class="counter-val" id="target-dinner-val">6</span>
@@ -245,15 +544,19 @@ textarea::placeholder { color: var(--muted); }
           </div>
         </div>
       </div>
-      <button class="btn-primary" id="btn-create">Create week →</button>
+      <button class="btn-primary" id="btn-create">Create week</button>
     </div>
-    <div class="divider">or join an existing week</div>
+
+    <div class="lobby-divider">or join an existing week</div>
+
+    <!-- Join session -->
     <div class="lobby-card">
-      <h2>Join a week</h2>
+      <div class="lobby-card-title">Join a week</div>
       <input type="text" id="join-code" placeholder="Session code (e.g. ABC123)" maxlength="10" style="text-transform:uppercase;letter-spacing:0.1em">
       <input type="text" id="join-name" placeholder="Your name" maxlength="20">
-      <button class="btn-primary" id="btn-join">Join →</button>
+      <button class="btn-primary" id="btn-join">Join</button>
     </div>
+
     <div class="lobby-footer">
       <button class="btn-ghost" id="btn-manage-meals">Manage meals</button>
     </div>
@@ -261,100 +564,125 @@ textarea::placeholder { color: var(--muted); }
 </div>
 
 <!-- Waiting -->
-<div id="screen-waiting" class="screen">
-  <div class="waiting-wrap">
-    <div class="waiting-icon">⏳</div>
-    <h2>Waiting for your partner</h2>
-    <p>Share this code or link with them</p>
-    <div class="share-box">
-      <div class="share-label">Session code</div>
-      <div class="share-code" id="display-code">------</div>
-      <div class="share-url" id="display-url"></div>
-      <button class="btn-secondary" id="btn-copy-link">Copy link</button>
-    </div>
+<div id="screen-waiting" class="screen" style="align-items:center;justify-content:center;flex:1;padding:32px 24px;gap:24px;text-align:center">
+  <div class="waiting-pulse">⏳</div>
+  <div>
+    <h2 class="waiting-title">Waiting for your partner</h2>
+    <p style="font-size:14px;color:var(--ink-3);margin-top:8px">Share this code or link with them</p>
+  </div>
+  <div class="share-box">
+    <div class="share-label">Session code</div>
+    <div class="share-code" id="display-code">------</div>
+    <div class="share-url" id="display-url"></div>
+    <button class="btn-secondary" id="btn-copy-link">Copy link</button>
   </div>
 </div>
 
 <!-- Swipe -->
-<div id="screen-swipe" class="screen">
-  <div id="swipe-main" style="display:flex;flex-direction:column;flex:1">
-    <div class="swipe-header">
-      <div class="logo-sm">🥦</div>
+<div id="screen-swipe" class="screen" style="position:relative">
+  <!-- Main swipe UI -->
+  <div class="swipe-main" id="swipe-main">
+    <div class="swipe-topbar">
       <div class="round-pill" id="round-pill">🥗 Lunch</div>
-      <div class="match-badge">❤️ <span id="match-count">0</span> / <span id="match-target">1</span></div>
-      <button class="btn-recipe-sm" id="btn-view-recipe">Recipe</button>
+      <div class="match-badge">❤️ <span class="count" id="match-count">0</span> / <span id="match-target">1</span></div>
+      <button class="btn-sm" id="btn-view-recipe">Recipe</button>
     </div>
-    <div class="partner-status" id="partner-status"></div>
-    <div class="card-area">
-      <div class="card-stack" id="card-stack">
-        <div class="swipe-card behind" id="card-behind"></div>
-        <div class="swipe-card top" id="card-top"></div>
+    <div class="partner-bar" id="partner-status"></div>
+    <div class="deck-meta">
+      <span class="deck-count" id="deck-count-num">0<span class="deck-count-total" id="deck-count-total">/0</span></span>
+      <div class="deck-progress"><div class="deck-progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="deck-area">
+      <div class="deck-stack" id="card-stack">
+        <div class="deck-slot deck-slot-3" id="card-third"></div>
+        <div class="deck-slot deck-slot-2" id="card-behind"></div>
+        <div class="deck-slot deck-slot-1" id="card-top"></div>
       </div>
-      <div class="progress-wrap">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-      </div>
     </div>
-    <div class="swipe-actions">
-      <button class="btn-dislike" id="btn-dislike">✕</button>
-      <button class="btn-like" id="btn-like">♥</button>
+    <div class="deck-actions">
+      <button class="deck-btn deck-btn-no" id="btn-dislike" aria-label="Pass">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </button>
+      <button class="deck-btn deck-btn-yes" id="btn-like" aria-label="Want">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-9.6-9.5C.6 7.7 3 4 6.5 4c2 0 3.6 1.1 4.5 2.6h2c.9-1.5 2.5-2.6 4.5-2.6 3.5 0 5.9 3.7 4.1 7.5C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>
+      </button>
     </div>
+    <div class="deck-hint">Drag · or tap below</div>
   </div>
-  <!-- Waiting for partner to finish a round -->
+
+  <!-- Between-round panels -->
   <div class="mid-panel" id="panel-waiting-round">
-    <div class="big-emoji" id="waiting-round-emoji">🥗</div>
-    <h2 id="waiting-round-title">Lunches done!</h2>
-    <p id="waiting-round-msg">Waiting for your partner to finish...</p>
+    <div class="mid-panel-emoji" id="waiting-round-emoji">🥗</div>
+    <div class="mid-panel-title" id="waiting-round-title">Lunches done!</div>
+    <p class="mid-panel-sub" id="waiting-round-msg">Waiting for your partner to finish…</p>
   </div>
-  <!-- Between rounds transition -->
   <div class="mid-panel" id="panel-next-round">
-    <div class="big-emoji">🍽️</div>
-    <h2>Now for dinners</h2>
-    <p>Swipe through the dinner options next</p>
+    <div class="mid-panel-emoji">🍽️</div>
+    <div class="mid-panel-title">Now for dinners</div>
+    <p class="mid-panel-sub">Swipe through the dinner options next</p>
+  </div>
+
+  <!-- Match toast -->
+  <div class="match-toast-wrap" id="match-toast-wrap" style="pointer-events:none">
+    <div class="match-toast" id="match-toast">
+      <div class="match-toast-dot"></div>
+      <div class="match-toast-text">
+        <span class="match-toast-eyebrow">MATCH</span>
+        <span class="match-toast-title" id="toast-meal-name"></span>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Results -->
 <div id="screen-results" class="screen">
-  <div class="results-wrap">
-    <h1>This Week's Menu</h1>
-    <p class="results-sub" id="results-sub"></p>
-    <div class="results-actions">
-      <button class="btn-primary" id="btn-toggle-shopping">🛒 Shopping list</button>
-      <button class="btn-secondary" id="btn-new-week">Start new week</button>
-    </div>
-    <div id="results-meals"></div>
-    <div id="shopping-wrap" class="shopping-wrap" style="display:none">
-      <div class="shopping-header">
-        <div class="shopping-title">Shopping List</div>
-        <button class="btn-recipe-sm" id="btn-copy-shopping">Copy as text</button>
+  <div class="main">
+    <div class="results-view">
+      <div class="results-head">
+        <div class="results-eyebrow">YOUR WEEK</div>
+        <h1 class="results-title">This Week's Menu</h1>
+        <div class="results-sub" id="results-sub"></div>
       </div>
-      <div id="shopping-sections"></div>
+      <div class="results-actions">
+        <button class="btn-primary" id="btn-toggle-shopping">Shopping list</button>
+        <button class="btn-secondary" id="btn-new-week">New week</button>
+      </div>
+      <div id="results-meals"></div>
+      <div id="shopping-wrap" class="shopping-wrap" style="display:none">
+        <div class="shopping-head">
+          <div class="shopping-title">Shopping List</div>
+          <button class="btn-sm" id="btn-copy-shopping">Copy text</button>
+        </div>
+        <div id="shopping-sections"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Meals management -->
 <div id="screen-meals" class="screen">
-  <div class="mgmt-wrap">
-    <div class="mgmt-header">
-      <button class="btn-recipe-sm" id="btn-back-lobby">← Back</button>
-      <h1>Meals</h1>
-    </div>
-    <span class="section-label">Current meals (<span id="meal-count">0</span>)</span>
-    <div id="meals-list"></div>
-    <span class="section-label" style="margin-top:36px">Add new meals</span>
-    <p style="color:var(--muted);font-size:0.83rem;margin-bottom:14px;line-height:1.6">
-      Ask Claude: <em>"give me 3 vegan dinner ideas in meal planner JSON format"</em> then paste the result below.
-    </p>
-    <div id="import-feedback" class="import-feedback"></div>
-    <textarea id="import-textarea" placeholder="Paste JSON here..."></textarea>
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="btn-primary" id="btn-import">Import meals</button>
-      <button class="btn-secondary" style="width:auto;padding:11px 20px" id="btn-clear-import">Clear</button>
-    </div>
-    <div class="template-box">
-      <div class="template-title">JSON format</div>
-      <div class="template-code">[
+  <div class="main">
+    <div class="mgmt-view">
+      <div class="mgmt-head">
+        <button class="btn-sm" id="btn-back-lobby">← Back</button>
+        <div class="mgmt-title">Meals</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)" id="meal-count-display"></div>
+      </div>
+      <span class="section-label">Current meals</span>
+      <div id="meals-list"></div>
+      <span class="section-label" style="margin-top:36px">Add new meals</span>
+      <p style="color:var(--ink-3);font-size:13px;margin-bottom:14px;line-height:1.6">
+        Ask Claude: <em style="color:var(--ink-2)">"give me 3 vegan dinner ideas in meal planner JSON format"</em> then paste the result below.
+      </p>
+      <div id="import-feedback" class="import-feedback"></div>
+      <textarea id="import-textarea" placeholder="Paste JSON here…"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn-primary" id="btn-import">Import meals</button>
+        <button class="btn-secondary" style="width:auto;padding:0 20px" id="btn-clear-import">Clear</button>
+      </div>
+      <div class="template-box">
+        <div class="template-title">JSON format</div>
+        <div class="template-code">[
   {
     "id": "unique-id",
     "name": "Meal Name",
@@ -366,24 +694,16 @@ textarea::placeholder { color: var(--muted); }
     "steps": ["Step one", "Step two"]
   }
 ]</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Recipe Modal -->
 <div id="modal" class="modal-overlay">
   <div class="modal">
     <button class="modal-close" id="modal-close">✕</button>
     <div id="modal-body"></div>
-  </div>
-</div>
-
-<!-- Match Toast -->
-<div class="match-toast">
-  <div class="match-toast-inner" id="match-toast-inner">
-    <div class="match-emoji">❤️</div>
-    <div class="match-title">It's a Match!</div>
-    <div class="match-meal-name" id="toast-meal-name"></div>
   </div>
 </div>
 
@@ -404,58 +724,72 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-// ── Seed meals ─────────────────────────────────────────────────────────────
+// Palettes: [dark-bg, mid, accent-highlight]
 const SEED_MEALS = [
   { id:"chickpea-pasta-salad", name:"Smoky Chickpea & Roasted Pepper Pasta Salad", type:"lunch", protein:"Chickpeas",
+    palette:["#0e1614","#1a4a2e","#8bc96a"],
     ingredients:[{name:"Fusilli or penne pasta",amount:"500g"},{name:"Chickpeas (tinned)",amount:"2 x 400g"},{name:"Roasted red peppers (jar)",amount:"1 jar"},{name:"Sun-dried tomatoes (jar)",amount:"1 jar"},{name:"Baby spinach",amount:"100g"},{name:"Red onion",amount:"1 large"},{name:"Smoked paprika",amount:"2 tsp"},{name:"Olive oil",amount:"3 tbsp"},{name:"Lemon",amount:"1"},{name:"Franks Red Hot sauce",amount:"2 tbsp"},{name:"Salt and pepper",amount:"to taste"}],
     steps:["Cook pasta according to packet instructions, drain and cool under cold water.","Drain chickpeas and roasted peppers, roughly chop the peppers.","Finely slice red onion and sun-dried tomatoes.","Make the dressing: whisk olive oil, lemon juice, hot sauce, smoked paprika, salt and pepper.","Combine pasta, chickpeas, peppers, sun-dried tomatoes, spinach and red onion.","Pour dressing over everything and toss well to coat.","Portion into 10 containers. Keeps in the fridge for up to 4 days."]},
   { id:"lasagne", name:"Vegan Lasagne and Garlic Bread", type:"dinner", protein:"Quorn Vegan Mince",
+    palette:["#1a0e0a","#6b2510","#e87c3c"],
     ingredients:[{name:"Quorn Vegan Mince",amount:"500g"},{name:"Lasagne sheets",amount:"1 pack"},{name:"Chopped tomatoes",amount:"2 x 400g"},{name:"Passata",amount:"500g"},{name:"Garlic cloves",amount:"4"},{name:"White onion",amount:"1"},{name:"Mixed herbs",amount:"2 tsp"},{name:"Oat milk",amount:"500ml"},{name:"Flora plant butter",amount:"40g"},{name:"Plain flour",amount:"40g"},{name:"Violife grated cheese",amount:"100g"},{name:"Vegan garlic bread",amount:"1 pack"}],
     steps:["Fry onion and garlic in a little oil until soft, about 5 mins.","Add mince and cook for 3-4 minutes, breaking it up.","Add chopped tomatoes, passata and mixed herbs. Simmer for 15 minutes.","Make white sauce: melt butter, stir in flour to make a paste, gradually add oat milk whisking constantly until thick and smooth.","Layer mince, lasagne sheets and white sauce in a deep dish. Finish with white sauce and grated cheese.","Bake at 190C for 35-40 minutes until golden and bubbling.","Cook garlic bread in the last 10 minutes. Rest lasagne for 5 minutes before serving."]},
   { id:"black-bean-tacos", name:"Smoky Black Bean Tacos with Slaw", type:"dinner", protein:"Black Beans",
+    palette:["#0f0a0a","#3a1e1e","#d77a5a"],
     ingredients:[{name:"Black beans (tinned)",amount:"2 x 400g"},{name:"Small flour tortillas",amount:"1 pack"},{name:"Coleslaw mix",amount:"1 bag"},{name:"Smoked paprika",amount:"2 tsp"},{name:"Ground cumin",amount:"1 tsp"},{name:"Garlic cloves",amount:"2"},{name:"Lime",amount:"1"},{name:"Franks Red Hot sauce",amount:"to taste"},{name:"Spring onions",amount:"4"},{name:"Fresh coriander",amount:"small bunch"},{name:"Olive oil",amount:"1 tbsp"}],
     steps:["Drain and rinse black beans. Fry with crushed garlic, paprika and cumin in olive oil for 5 minutes until fragrant.","Lightly mash about half the beans with a fork to create a chunky texture.","Season the coleslaw mix with lime juice, hot sauce, salt and a little olive oil.","Warm tortillas in a dry pan or directly over a gas flame.","Load tortillas with beans, slaw, spring onions and coriander.","Finish with a squeeze of lime and as much hot sauce as you like."]},
   { id:"tikka-masala", name:"Vegan Tikka Masala with Flatbread", type:"dinner", protein:"Tofu",
+    palette:["#1a120c","#6b3514","#e89a3c"],
     ingredients:[{name:"Firm tofu",amount:"400g"},{name:"Tikka Masala paste",amount:"3 tbsp"},{name:"Chopped tomatoes",amount:"1 x 400g"},{name:"Coconut milk",amount:"1 x 400ml"},{name:"White onion",amount:"1"},{name:"Garlic cloves",amount:"3"},{name:"Fresh ginger",amount:"thumb-sized piece"},{name:"Baby spinach",amount:"large handful"},{name:"Flatbreads",amount:"4"},{name:"Fresh coriander",amount:"small bunch"},{name:"Olive oil",amount:"1 tbsp"}],
     steps:["Press tofu dry with kitchen paper, cut into 2cm cubes.","Fry tofu in oil until golden on all sides, about 8 minutes. Set aside.","Fry onion until soft, add garlic and ginger and cook for 2 minutes.","Add tikka masala paste and stir for 1 minute until fragrant.","Add chopped tomatoes and coconut milk, stir to combine. Simmer for 12 minutes.","Return tofu to the pan, add spinach and stir until wilted.","Warm flatbreads. Serve curry topped with fresh coriander."]},
   { id:"sausage-casserole", name:"Vegan Sausage Casserole with Crusty Bread", type:"dinner", protein:"Quorn Vegan Sausages",
+    palette:["#16100c","#4a2814","#c87a4a"],
     ingredients:[{name:"Quorn Vegan Sausages",amount:"12 sausages"},{name:"Chopped tomatoes",amount:"1 x 400g"},{name:"Butter beans (tinned)",amount:"1 x 400g"},{name:"Red onion",amount:"1"},{name:"Mixed peppers",amount:"2"},{name:"Garlic cloves",amount:"3"},{name:"Smoked paprika",amount:"1 tsp"},{name:"Mixed herbs",amount:"1 tsp"},{name:"Vegetable stock",amount:"200ml"},{name:"Tomato puree",amount:"1 tbsp"},{name:"Sourdough or crusty loaf",amount:"1"}],
     steps:["Brown sausages in a little oil for 5-6 minutes, turning. Set aside.","Fry onion and peppers until softened, about 6 minutes. Add garlic and cook 1 minute more.","Add paprika, herbs and tomato puree, stir for 30 seconds.","Add chopped tomatoes, stock and butter beans. Stir well.","Return sausages to the pan, pushing them into the sauce.","Simmer for 20 minutes until the sauce has thickened.","Serve with thick slices of crusty bread to mop up the sauce."]},
   { id:"mushroom-pasta", name:"Creamy Mushroom and Spinach Pasta", type:"dinner", protein:"Butter Beans and Mushrooms",
+    palette:["#13140d","#3f4a1e","#bdd36a"],
     ingredients:[{name:"Chestnut mushrooms",amount:"400g"},{name:"Butter beans (tinned)",amount:"1 x 400g"},{name:"Pasta (any shape)",amount:"300g"},{name:"Baby spinach",amount:"large handful"},{name:"Garlic cloves",amount:"4"},{name:"Oat milk",amount:"200ml"},{name:"Vegetable stock",amount:"100ml"},{name:"Plain flour",amount:"1 tbsp"},{name:"Flora plant butter",amount:"20g"},{name:"Violife grated cheese",amount:"50g"},{name:"Chilli flakes",amount:"pinch"}],
     steps:["Cook pasta according to packet instructions. Reserve a cup of pasta water before draining.","Slice mushrooms thickly. Fry in butter with garlic until golden and all moisture has evaporated, about 8-10 minutes.","Add flour and stir for 30 seconds. Gradually add oat milk and stock, stirring constantly.","Drain and add butter beans, simmer for 3 minutes until sauce thickens.","Add drained pasta and spinach, toss to coat. Use pasta water to loosen if needed.","Serve topped with vegan cheese and a pinch of chilli flakes."]},
   { id:"butter-bean-stew", name:"Butter Bean and Tomato Stew with Pitta", type:"dinner", protein:"Butter Beans",
+    palette:["#13140d","#2e4a1e","#a3c56b"],
     ingredients:[{name:"Butter beans (tinned)",amount:"2 x 400g"},{name:"Chopped tomatoes",amount:"1 x 400g"},{name:"Cherry tomatoes",amount:"1 punnet"},{name:"Red onion",amount:"1"},{name:"Garlic cloves",amount:"4"},{name:"Smoked paprika",amount:"1 tsp"},{name:"Ground cumin",amount:"1 tsp"},{name:"Chilli flakes",amount:"pinch"},{name:"Baby spinach",amount:"large handful"},{name:"Lemon",amount:"1"},{name:"Pitta breads",amount:"4"},{name:"Fresh coriander",amount:"small bunch"}],
     steps:["Fry onion until soft and golden, about 7 minutes. Add garlic, paprika, cumin and chilli flakes.","Add cherry tomatoes and cook until they start to burst, about 4 minutes.","Add chopped tomatoes and butter beans. Stir and simmer for 15 minutes.","Season well with salt, pepper and a good squeeze of lemon juice.","Stir in spinach until wilted. Taste and adjust seasoning.","Toast pittas. Serve stew with coriander scattered over and pitta alongside."]}
 ];
+
+const PALETTE_DEFAULTS = {
+  lunch:  ["#0e1614","#1f5638","#a3d977"],
+  dinner: ["#1a0e0a","#4a2010","#d97a3c"],
+};
+
+function getPalette(meal) {
+  if (meal.palette && meal.palette.length === 3) return meal.palette;
+  return PALETTE_DEFAULTS[meal.type] || PALETTE_DEFAULTS.dinner;
+}
 
 // ── State ──────────────────────────────────────────────────────────────────
 let meals = [];
 let sessionId = null;
 let mySlot = null;
 let sessionData = null;
-let currentRound = 'lunch'; // 'lunch' | 'dinner'
+let currentRound = 'lunch';
 let mealQueue = [];
 let swipeIndex = 0;
 let unsub = null;
 let knownLunchMatches = new Set();
 let knownDinnerMatches = new Set();
 let swiping = false;
-let dragStartX = 0;
+let dragStartX = 0, dragStartY = 0;
 let dragging = false;
-let curDragX = 0;
+let curDragX = 0, curDragY = 0;
+let lunchTarget = 1, dinnerTarget = 6;
 
-// Target counter state
-let lunchTarget = 1;
-let dinnerTarget = 6;
-
-// ── Counter controls ───────────────────────────────────────────────────────
+// ── Counter controls ─────────────────────────────────────────────────────
 document.getElementById('lunch-minus').addEventListener('click', () => { if (lunchTarget > 1) { lunchTarget--; document.getElementById('target-lunch-val').textContent = lunchTarget; } });
 document.getElementById('lunch-plus').addEventListener('click', () => { lunchTarget++; document.getElementById('target-lunch-val').textContent = lunchTarget; });
 document.getElementById('dinner-minus').addEventListener('click', () => { if (dinnerTarget > 1) { dinnerTarget--; document.getElementById('target-dinner-val').textContent = dinnerTarget; } });
 document.getElementById('dinner-plus').addEventListener('click', () => { dinnerTarget++; document.getElementById('target-dinner-val').textContent = dinnerTarget; });
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────
 async function init() {
   try { await loadMeals(); } catch (err) { alert('Failed to load meals: ' + err.message); }
   const params = new URLSearchParams(location.search);
@@ -488,7 +822,7 @@ async function seedMeals() {
   meals = [...SEED_MEALS];
 }
 
-// ── Saved week ─────────────────────────────────────────────────────────────
+// ── Saved week ────────────────────────────────────────────────────────────
 function checkSavedWeek() {
   const saved = localStorage.getItem('savedWeek');
   if (!saved) return;
@@ -510,7 +844,7 @@ function clearSavedWeek() {
   document.getElementById('this-week-card').style.display = 'none';
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -518,45 +852,42 @@ function showScreen(id) {
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 function sessionRef() { return doc(db, 'sessions', sessionId); }
 function partnerSlot() { return mySlot === 'player1' ? 'player2' : 'player1'; }
-
 function lunchMeals() { return meals.filter(m => m.type === 'lunch'); }
 function dinnerMeals() { return meals.filter(m => m.type === 'dinner'); }
 
-// ── Create session ─────────────────────────────────────────────────────────
+// ── Create session ────────────────────────────────────────────────────────
 document.getElementById('btn-create').addEventListener('click', async () => {
   const name = document.getElementById('create-name').value.trim();
   if (!name) { alert('Enter your name first'); return; }
   const btn = document.getElementById('btn-create');
-  btn.textContent = 'Creating...'; btn.disabled = true;
+  btn.textContent = 'Creating…'; btn.disabled = true;
   try {
     sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
     mySlot = 'player1';
     const lo = shuffle(lunchMeals()).map(m => m.id);
     const ddo = shuffle(dinnerMeals()).map(m => m.id);
     await setDoc(sessionRef(), {
-      status: 'waiting',
-      createdAt: Date.now(),
+      status: 'waiting', createdAt: Date.now(),
       targets: { lunch: lunchTarget, dinner: dinnerTarget },
       player1: { name, lunchDone: false, dinnerDone: false, lunchSwipes: {}, dinnerSwipes: {}, lunchOrder: lo, dinnerOrder: ddo },
-      player2: null,
-      lunchMatches: [], dinnerMatches: [], finalWeek: []
+      player2: null, lunchMatches: [], dinnerMatches: [], finalWeek: []
     });
     document.getElementById('display-code').textContent = sessionId;
     document.getElementById('display-url').textContent = location.origin + location.pathname + '?s=' + sessionId;
     showScreen('screen-waiting');
     subscribeSession();
   } catch (err) { alert('Could not create session: ' + err.message); }
-  finally { btn.textContent = 'Create week →'; btn.disabled = false; }
+  finally { btn.textContent = 'Create week'; btn.disabled = false; }
 });
 
-// ── Join session ───────────────────────────────────────────────────────────
+// ── Join session ──────────────────────────────────────────────────────────
 document.getElementById('btn-join').addEventListener('click', async () => {
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   const name = document.getElementById('join-name').value.trim();
   if (!code) { alert('Enter a session code'); return; }
   if (!name) { alert('Enter your name'); return; }
   const btn = document.getElementById('btn-join');
-  btn.textContent = 'Joining...'; btn.disabled = true;
+  btn.textContent = 'Joining…'; btn.disabled = true;
   try {
     sessionId = code;
     const snap = await getDoc(sessionRef());
@@ -571,16 +902,11 @@ document.getElementById('btn-join').addEventListener('click', async () => {
       'player2.lunchSwipes': {}, 'player2.dinnerSwipes': {},
       'player2.lunchOrder': lo, 'player2.dinnerOrder': ddo, status: 'lunch'
     });
-    currentRound = 'lunch';
-    mealQueue = lo;
-    swipeIndex = 0;
-    updateRoundUI();
-    subscribeSession();
-    showSwipeUI();
-    showScreen('screen-swipe');
-    renderCard();
+    currentRound = 'lunch'; mealQueue = lo; swipeIndex = 0;
+    updateRoundUI(); subscribeSession(); showSwipeUI();
+    showScreen('screen-swipe'); renderCard();
   } catch (err) { alert('Could not join: ' + err.message); }
-  finally { btn.textContent = 'Join →'; btn.disabled = false; }
+  finally { btn.textContent = 'Join'; btn.disabled = false; }
 });
 
 document.getElementById('btn-copy-link').addEventListener('click', () => {
@@ -591,7 +917,7 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
   });
 });
 
-// ── Realtime listener ──────────────────────────────────────────────────────
+// ── Realtime listener ─────────────────────────────────────────────────────
 function subscribeSession() {
   if (unsub) unsub();
   unsub = onSnapshot(sessionRef(), snap => {
@@ -602,25 +928,15 @@ function subscribeSession() {
 }
 
 function onUpdate(data) {
-  // Waiting → lunch
   if (data.status === 'lunch' && document.querySelector('.screen.active')?.id === 'screen-waiting') {
-    currentRound = 'lunch';
-    mealQueue = data[mySlot]?.lunchOrder || [];
-    swipeIndex = 0;
-    updateRoundUI();
-    showSwipeUI();
-    showScreen('screen-swipe');
-    renderCard();
-    return;
+    currentRound = 'lunch'; mealQueue = data[mySlot]?.lunchOrder || []; swipeIndex = 0;
+    updateRoundUI(); showSwipeUI(); showScreen('screen-swipe'); renderCard(); return;
   }
-
   if (data.status === 'complete') { showResults(data); return; }
 
-  // Update match counts
   const roundMatches = data[`${currentRound}Matches`] || [];
   document.getElementById('match-count').textContent = roundMatches.length;
 
-  // Toast new matches
   (data.lunchMatches || []).forEach(id => {
     if (!knownLunchMatches.has(id)) { knownLunchMatches.add(id); showMatchToast(meals.find(m => m.id === id)?.name); }
   });
@@ -628,27 +944,17 @@ function onUpdate(data) {
     if (!knownDinnerMatches.has(id)) { knownDinnerMatches.add(id); showMatchToast(meals.find(m => m.id === id)?.name); }
   });
 
-  // Partner status
   updatePartnerStatus(data);
   reconcileMatches(data);
 
-  // Round transitions (player1 triggers)
   if (mySlot === 'player1') {
-    if (data.player1?.lunchDone && data.player2?.lunchDone && data.status === 'lunch') {
-      updateDoc(sessionRef(), { status: 'dinner' });
-    }
-    if (data.player1?.dinnerDone && data.player2?.dinnerDone && data.status === 'dinner') {
-      finalizeWeek(data);
-    }
+    if (data.player1?.lunchDone && data.player2?.lunchDone && data.status === 'lunch') updateDoc(sessionRef(), { status: 'dinner' });
+    if (data.player1?.dinnerDone && data.player2?.dinnerDone && data.status === 'dinner') finalizeWeek(data);
   }
 
-  // React to status change → dinner round
   if (data.status === 'dinner' && currentRound === 'lunch') {
-    currentRound = 'dinner';
-    mealQueue = data[mySlot]?.dinnerOrder || [];
-    swipeIndex = 0;
+    currentRound = 'dinner'; mealQueue = data[mySlot]?.dinnerOrder || []; swipeIndex = 0;
     updateRoundUI();
-    // Show "now for dinners" briefly then start
     showPanel('panel-next-round');
     setTimeout(() => { showSwipeUI(); renderCard(); }, 2200);
   }
@@ -657,17 +963,17 @@ function onUpdate(data) {
 function updatePartnerStatus(data) {
   const partner = data[partnerSlot()];
   const el = document.getElementById('partner-status');
-  if (!partner) { el.textContent = 'Waiting for partner to join...'; return; }
+  if (!partner) { el.innerHTML = 'Waiting for partner to join…'; return; }
   const swipes = partner[`${currentRound}Swipes`] || {};
   const total = currentRound === 'lunch' ? lunchMeals().length : dinnerMeals().length;
   const done = partner[`${currentRound}Done`];
   el.innerHTML = done
-    ? `<span>${partner.name}</span> has finished ${currentRound}`
-    : `<span>${partner.name}</span> has swiped ${Object.keys(swipes).length} / ${total}`;
+    ? `<em>${partner.name}</em> has finished ${currentRound}`
+    : `<em>${partner.name}</em> · ${Object.keys(swipes).length}/${total} swiped`;
 }
 
 function reconcileMatches(data) {
-  const p1 = data.player1 || {}; const p2 = data.player2 || {};
+  const p1 = data.player1 || {}, p2 = data.player2 || {};
   const missingLunch = meals.filter(m => m.type === 'lunch' && p1.lunchSwipes?.[m.id] === true && p2.lunchSwipes?.[m.id] === true && !(data.lunchMatches || []).includes(m.id)).map(m => m.id);
   const missingDinner = meals.filter(m => m.type === 'dinner' && p1.dinnerSwipes?.[m.id] === true && p2.dinnerSwipes?.[m.id] === true && !(data.dinnerMatches || []).includes(m.id)).map(m => m.id);
   const updates = {};
@@ -678,7 +984,6 @@ function reconcileMatches(data) {
 
 async function finalizeWeek(data) {
   const t = data.targets || { lunch: 1, dinner: 6 };
-
   function pick(matched, pool, target) {
     let final = [...matched];
     if (final.length > target) final = shuffle(final).slice(0, target);
@@ -688,16 +993,12 @@ async function finalizeWeek(data) {
     }
     return final;
   }
-
-  const lunchPool = lunchMeals().map(m => m.id);
-  const dinnerPool = dinnerMeals().map(m => m.id);
-  const finalLunch = pick(data.lunchMatches || [], lunchPool, t.lunch);
-  const finalDinner = pick(data.dinnerMatches || [], dinnerPool, t.dinner);
-
+  const finalLunch = pick(data.lunchMatches || [], lunchMeals().map(m => m.id), t.lunch);
+  const finalDinner = pick(data.dinnerMatches || [], dinnerMeals().map(m => m.id), t.dinner);
   await updateDoc(sessionRef(), { finalWeek: [...finalLunch, ...finalDinner], status: 'complete' });
 }
 
-// ── Round UI helpers ───────────────────────────────────────────────────────
+// ── Round UI ──────────────────────────────────────────────────────────────
 function updateRoundUI() {
   const pill = document.getElementById('round-pill');
   const target = document.getElementById('match-target');
@@ -713,59 +1014,89 @@ function updateRoundUI() {
 
 function showSwipeUI() {
   document.getElementById('swipe-main').style.display = 'flex';
-  document.getElementById('panel-waiting-round').style.display = 'none';
-  document.getElementById('panel-next-round').style.display = 'none';
+  document.getElementById('panel-waiting-round').classList.remove('visible');
+  document.getElementById('panel-next-round').classList.remove('visible');
 }
 
 function showPanel(id) {
   document.getElementById('swipe-main').style.display = 'none';
-  document.getElementById('panel-waiting-round').style.display = 'none';
-  document.getElementById('panel-next-round').style.display = 'none';
-  document.getElementById(id).style.display = 'flex';
+  document.getElementById('panel-waiting-round').classList.remove('visible');
+  document.getElementById('panel-next-round').classList.remove('visible');
+  document.getElementById(id).classList.add('visible');
 }
 
-// ── Card rendering ─────────────────────────────────────────────────────────
+// ── Card rendering ────────────────────────────────────────────────────────
 function renderCard() {
-  const topEl = document.getElementById('card-top');
+  const topEl    = document.getElementById('card-top');
   const behindEl = document.getElementById('card-behind');
+  const thirdEl  = document.getElementById('card-third');
+
   if (swipeIndex >= mealQueue.length) {
     showPanel('panel-waiting-round');
     const isLunch = currentRound === 'lunch';
     document.getElementById('waiting-round-emoji').textContent = isLunch ? '🥗' : '🍽️';
     document.getElementById('waiting-round-title').textContent = isLunch ? 'Lunches done!' : 'Dinners done!';
-    document.getElementById('waiting-round-msg').textContent = 'Waiting for your partner to finish...';
+    document.getElementById('waiting-round-msg').textContent = 'Waiting for your partner to finish…';
     return;
   }
-  const meal = meals.find(m => m.id === mealQueue[swipeIndex]);
-  const next = swipeIndex + 1 < mealQueue.length ? meals.find(m => m.id === mealQueue[swipeIndex + 1]) : null;
+
+  const meal  = meals.find(m => m.id === mealQueue[swipeIndex]);
+  const next  = swipeIndex + 1 < mealQueue.length ? meals.find(m => m.id === mealQueue[swipeIndex + 1]) : null;
+  const third = swipeIndex + 2 < mealQueue.length ? meals.find(m => m.id === mealQueue[swipeIndex + 2]) : null;
+
   fillCard(topEl, meal, true);
-  if (next) fillCard(behindEl, next, false); else behindEl.innerHTML = '';
-  topEl.className = 'swipe-card top new-top';
-  topEl.style.transform = '';
-  behindEl.className = 'swipe-card behind';
-  document.getElementById('progress-fill').style.width = (swipeIndex / mealQueue.length * 100) + '%';
+  if (next)  fillCard(behindEl, next, false); else behindEl.innerHTML = '';
+  if (third) fillCard(thirdEl, third, false); else thirdEl.innerHTML = '';
+
+  topEl.className = 'deck-slot deck-slot-1';
+  topEl.style.cssText = '';
+  behindEl.className = 'deck-slot deck-slot-2';
+  thirdEl.className  = 'deck-slot deck-slot-3';
+
+  const total = mealQueue.length;
+  document.getElementById('deck-count-num').firstChild.textContent = swipeIndex;
+  document.getElementById('deck-count-total').textContent = '/' + total;
+  document.getElementById('progress-fill').style.width = (swipeIndex / total * 100) + '%';
   setupDrag(topEl);
 }
 
 function fillCard(el, meal, isTop) {
+  if (!meal) { el.innerHTML = ''; return; }
+  const [a, b, c] = getPalette(meal);
+  const note = meal.ingredients?.slice(0, 3).map(i => i.name).join(' · ') || '';
+  const titleSize = 'clamp(26px, 5vh, 48px)';
   el.innerHTML = `
-    ${isTop ? '<div class="like-stamp" id="like-stamp">LOVE IT</div><div class="nope-stamp" id="nope-stamp">NOPE</div>' : ''}
-    <div class="card-type-tag tag-${meal.type}">${meal.type}</div>
-    <div class="card-name">${meal.name}</div>
-    <div class="card-protein">Protein: <span>${meal.protein}</span></div>
-    <div class="card-preview">${meal.ingredients.slice(0, 3).map(i => i.name).join(' · ')}</div>
+    <div class="mc-card">
+      <div class="mc-art" style="background:radial-gradient(120% 80% at 80% 10%,${c}55 0%,transparent 60%),radial-gradient(140% 100% at 20% 100%,${b}cc 0%,transparent 70%),linear-gradient(180deg,${a} 0%,${b} 100%)">
+        <div class="mc-grain"></div>
+        <div class="mc-art-meta">
+          <span>${meal.type.toUpperCase()}</span>
+          <span>${meal.protein}</span>
+        </div>
+        <div class="mc-art-title" style="font-size:${titleSize};color:${c}">${meal.name}</div>
+        ${isTop ? `<div class="deck-stamp deck-stamp-yes" id="like-stamp" style="opacity:0">YES</div><div class="deck-stamp deck-stamp-no" id="nope-stamp" style="opacity:0">PASS</div>` : ''}
+      </div>
+      <div class="mc-foot">
+        <div>
+          <div class="mc-foot-label">PROTEIN</div>
+          <div class="mc-foot-value">${meal.protein}</div>
+        </div>
+        <div class="mc-note">${note}</div>
+      </div>
+    </div>
   `;
 }
 
-// ── Drag ───────────────────────────────────────────────────────────────────
+// ── Drag ──────────────────────────────────────────────────────────────────
 function setupDrag(card) {
   card.addEventListener('mousedown', startDrag);
   card.addEventListener('touchstart', startDrag, { passive: true });
 }
 function startDrag(e) {
   if (swiping) return;
-  dragging = true; curDragX = 0;
-  dragStartX = (e.touches ? e.touches[0] : e).clientX;
+  dragging = true; curDragX = 0; curDragY = 0;
+  const pt = e.touches ? e.touches[0] : e;
+  dragStartX = pt.clientX; dragStartY = pt.clientY;
   document.addEventListener('mousemove', moveDrag);
   document.addEventListener('mouseup', endDrag);
   document.addEventListener('touchmove', moveDrag, { passive: false });
@@ -774,13 +1105,19 @@ function startDrag(e) {
 function moveDrag(e) {
   if (!dragging) return;
   if (e.cancelable) e.preventDefault();
-  curDragX = (e.touches ? e.touches[0] : e).clientX - dragStartX;
+  const pt = e.touches ? e.touches[0] : e;
+  curDragX = pt.clientX - dragStartX;
+  curDragY = pt.clientY - dragStartY;
   const card = document.getElementById('card-top');
-  card.style.transform = `translateX(${curDragX}px) rotate(${curDragX * 0.06}deg)`;
-  const pct = Math.min(Math.abs(curDragX) / 90, 1);
-  const ls = document.getElementById('like-stamp'); const ns = document.getElementById('nope-stamp');
-  if (ls) ls.style.opacity = curDragX > 0 ? pct : 0;
-  if (ns) ns.style.opacity = curDragX < 0 ? pct : 0;
+  if (!card) return;
+  card.style.transform = `translate(${curDragX}px,${curDragY * 0.3}px) rotate(${curDragX / 16}deg)`;
+  card.style.transition = 'none';
+  const pct  = Math.max(0, Math.min(1, curDragX / 120));
+  const npct = Math.max(0, Math.min(1, -curDragX / 120));
+  const ls = document.getElementById('like-stamp');
+  const ns = document.getElementById('nope-stamp');
+  if (ls) ls.style.opacity = pct;
+  if (ns) ns.style.opacity = npct;
 }
 function endDrag() {
   if (!dragging) return;
@@ -791,10 +1128,9 @@ function endDrag() {
   else if (curDragX < -80) doSwipe('dislike');
   else {
     const card = document.getElementById('card-top');
-    card.style.transition = 'transform 0.3s ease'; card.style.transform = '';
+    if (card) { card.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)'; card.style.transform = ''; }
     const ls = document.getElementById('like-stamp'); const ns = document.getElementById('nope-stamp');
     if (ls) ls.style.opacity = 0; if (ns) ns.style.opacity = 0;
-    setTimeout(() => { card.style.transition = ''; }, 300);
   }
 }
 
@@ -804,10 +1140,12 @@ async function doSwipe(direction) {
   const mealId = mealQueue[swipeIndex];
   const liked = direction === 'like';
   const card = document.getElementById('card-top');
-  const stamp = liked ? document.getElementById('like-stamp') : document.getElementById('nope-stamp');
-  if (stamp) stamp.style.opacity = 1;
-  card.classList.add(liked ? 'exit-right' : 'exit-left');
-  document.getElementById('card-behind').classList.add('promote');
+  if (card) {
+    const sign = liked ? 1 : -1;
+    card.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1), opacity .32s';
+    card.style.transform = `translate(${sign * 600}px, ${curDragY * 0.5}px) rotate(${sign * 22}deg)`;
+    card.style.opacity = '0';
+  }
 
   const swipesField = `${mySlot}.${currentRound}Swipes.${mealId}`;
   const matchesField = `${currentRound}Matches`;
@@ -818,7 +1156,7 @@ async function doSwipe(direction) {
     updates[matchesField] = arrayUnion(mealId);
   }
   await updateDoc(sessionRef(), updates);
-  setTimeout(() => { swiping = false; renderCard(); }, 340);
+  setTimeout(() => { swiping = false; curDragX = 0; curDragY = 0; renderCard(); }, 340);
 }
 
 document.getElementById('btn-like').addEventListener('click', () => doSwipe('like'));
@@ -827,16 +1165,16 @@ document.getElementById('btn-view-recipe').addEventListener('click', () => {
   if (swipeIndex < mealQueue.length) openModal(mealQueue[swipeIndex]);
 });
 
-// ── Match toast ────────────────────────────────────────────────────────────
+// ── Match toast ───────────────────────────────────────────────────────────
 function showMatchToast(name) {
   if (!name) return;
   document.getElementById('toast-meal-name').textContent = name;
-  const inner = document.getElementById('match-toast-inner');
-  inner.classList.add('show');
-  setTimeout(() => inner.classList.remove('show'), 2600);
+  const el = document.getElementById('match-toast');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
 }
 
-// ── Results ────────────────────────────────────────────────────────────────
+// ── Results ───────────────────────────────────────────────────────────────
 function showResults(data) {
   showScreen('screen-results');
   if (sessionId) {
@@ -844,27 +1182,22 @@ function showResults(data) {
     localStorage.setItem('savedWeek', JSON.stringify({ sid: sessionId, label }));
     history.pushState({}, '', location.origin + location.pathname + '?view=' + sessionId);
   }
-
   const final = data.finalWeek || [];
-  const lunchFinal = final.filter(id => meals.find(m => m.id === id)?.type === 'lunch');
+  const lunchFinal  = final.filter(id => meals.find(m => m.id === id)?.type === 'lunch');
   const dinnerFinal = final.filter(id => meals.find(m => m.id === id)?.type === 'dinner');
   const lm = new Set(data.lunchMatches || []);
   const dm = new Set(data.dinnerMatches || []);
-  const t = data.targets || { lunch: 1, dinner: 6 };
 
-  document.getElementById('results-sub').textContent =
-    `${lunchFinal.length} lunch · ${dinnerFinal.length} dinners`;
-
+  document.getElementById('results-sub').textContent = `${lunchFinal.length} lunch · ${dinnerFinal.length} dinners`;
   const el = document.getElementById('results-meals');
   el.innerHTML = '';
-
   if (lunchFinal.length) {
-    const h = document.createElement('div'); h.className = 'results-round-heading'; h.textContent = '🥗 Lunch'; el.appendChild(h);
+    const h = document.createElement('div'); h.className = 'results-round-title'; h.textContent = '🥗 Lunch'; el.appendChild(h);
     appendResultGroup(el, lunchFinal.filter(id => lm.has(id)), 'matched');
     appendResultGroup(el, lunchFinal.filter(id => !lm.has(id)), 'auto');
   }
   if (dinnerFinal.length) {
-    const h = document.createElement('div'); h.className = 'results-round-heading'; h.textContent = '🍽️ Dinners'; el.appendChild(h);
+    const h = document.createElement('div'); h.className = 'results-round-title'; h.textContent = '🍽️ Dinners'; el.appendChild(h);
     appendResultGroup(el, dinnerFinal.filter(id => dm.has(id)), 'matched');
     appendResultGroup(el, dinnerFinal.filter(id => !dm.has(id)), 'auto');
   }
@@ -888,7 +1221,7 @@ function makeResultCard(id, kind) {
   el.innerHTML = `
     <div class="result-meal-info">
       <div class="result-meal-name">${meal.name}</div>
-      <div class="result-meal-meta">${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} · ${meal.protein}</div>
+      <div class="result-meal-meta">${meal.type.toUpperCase()} · ${meal.protein}</div>
     </div>
     <span class="result-badge badge-${kind === 'matched' ? 'match' : 'auto'}">${kind === 'matched' ? '❤️ Match' : '🎲 Auto'}</span>
   `;
@@ -896,7 +1229,7 @@ function makeResultCard(id, kind) {
   return el;
 }
 
-// ── Shopping list ──────────────────────────────────────────────────────────
+// ── Shopping list ─────────────────────────────────────────────────────────
 const AISLE_ORDER = ["Fruit & Veg","Chilled","Frozen","Pasta & Bread","Tins & Jars","Dried & Spices","Condiments"];
 function getCategory(name) {
   const n = name.toLowerCase();
@@ -904,11 +1237,10 @@ function getCategory(name) {
   if (n.includes('tofu')||n.includes('mince')||n.includes('sausage')||n.includes('oat milk')||n.includes('violife')||n.includes('flora')) return 'Chilled';
   if (n.includes('onion')||n.includes('garlic')||n.includes('spinach')||n.includes('mushroom')||n.includes('cherry tomato')||n.includes('pepper')||n.includes('spring onion')||n.includes('coriander')||n.includes('ginger')||n.includes('lime')||n.includes('lemon')||n.includes('coleslaw')) return 'Fruit & Veg';
   if (n.includes('chickpea')||n.includes('black bean')||n.includes('butter bean')||n.includes('chopped tomato')||n.includes('passata')||n.includes('coconut milk')||n.includes('sun-dried')||n.includes('roasted red pepper')||n.includes('tikka')||n.includes('tomato puree')) return 'Tins & Jars';
-  if (n.includes('paprika')||n.includes('cumin')||n.includes('herb')||n.includes('flour')||n.includes('chilli')||n.includes('stock')||n.includes('salt')||n.includes('pepper')) return 'Dried & Spices';
+  if (n.includes('paprika')||n.includes('cumin')||n.includes('herb')||n.includes('flour')||n.includes('chilli')||n.includes('stock')||n.includes('salt')) return 'Dried & Spices';
   if (n.includes('oil')||n.includes('frank')||n.includes('hot sauce')||n.includes('soy')||n.includes('sauce')) return 'Condiments';
   return 'Tins & Jars';
 }
-
 function renderShoppingList(mealIds) {
   const by = {};
   mealIds.forEach(id => {
@@ -940,7 +1272,7 @@ let shoppingOpen = false;
 document.getElementById('btn-toggle-shopping').addEventListener('click', () => {
   shoppingOpen = !shoppingOpen;
   document.getElementById('shopping-wrap').style.display = shoppingOpen ? 'block' : 'none';
-  document.getElementById('btn-toggle-shopping').textContent = shoppingOpen ? '🛒 Hide list' : '🛒 Shopping list';
+  document.getElementById('btn-toggle-shopping').textContent = shoppingOpen ? 'Hide list' : 'Shopping list';
 });
 document.getElementById('btn-copy-shopping').addEventListener('click', () => {
   let text = 'Shopping List\n\n';
@@ -951,37 +1283,41 @@ document.getElementById('btn-copy-shopping').addEventListener('click', () => {
   });
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('btn-copy-shopping'); btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = 'Copy as text', 2000);
+    setTimeout(() => btn.textContent = 'Copy text', 2000);
   });
 });
 
-// ── New week ───────────────────────────────────────────────────────────────
+// ── New week ──────────────────────────────────────────────────────────────
 document.getElementById('btn-new-week').addEventListener('click', () => {
   if (unsub) unsub();
   sessionId = null; mySlot = null; sessionData = null; currentRound = 'lunch';
   mealQueue = []; swipeIndex = 0; knownLunchMatches = new Set(); knownDinnerMatches = new Set();
   swiping = false; shoppingOpen = false;
-  document.getElementById('swipe-main').style.display = 'flex';
-  document.getElementById('panel-waiting-round').style.display = 'none';
-  document.getElementById('panel-next-round').style.display = 'none';
   document.getElementById('shopping-wrap').style.display = 'none';
-  document.getElementById('btn-toggle-shopping').textContent = '🛒 Shopping list';
+  document.getElementById('btn-toggle-shopping').textContent = 'Shopping list';
   clearSavedWeek();
   history.pushState({}, '', location.pathname);
   showScreen('screen-lobby');
 });
 
-// ── Meal management ────────────────────────────────────────────────────────
+// ── Meals management ──────────────────────────────────────────────────────
 document.getElementById('btn-manage-meals').addEventListener('click', () => { renderMealsList(); showScreen('screen-meals'); });
 document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('screen-lobby'));
 
 function renderMealsList() {
   const el = document.getElementById('meals-list'); el.innerHTML = '';
-  document.getElementById('meal-count').textContent = meals.length;
+  document.getElementById('meal-count-display').textContent = meals.length + ' meals';
   [...meals].sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)).forEach(meal => {
     const row = document.createElement('div'); row.className = 'meal-row';
-    row.innerHTML = `<div class="meal-row-info"><div class="meal-row-name">${meal.name}</div><div class="meal-row-meta">${meal.type.charAt(0).toUpperCase()+meal.type.slice(1)} · ${meal.protein}</div></div><button class="btn-recipe-sm">Recipe</button><button class="btn-danger">Delete</button>`;
-    row.querySelector('.btn-recipe-sm').addEventListener('click', () => openModal(meal.id));
+    row.innerHTML = `
+      <div class="meal-row-info">
+        <div class="meal-row-name">${meal.name}</div>
+        <div class="meal-row-meta">${meal.type.toUpperCase()} · ${meal.protein}</div>
+      </div>
+      <button class="btn-sm">Recipe</button>
+      <button class="btn-danger">Delete</button>
+    `;
+    row.querySelector('.btn-sm').addEventListener('click', () => openModal(meal.id));
     row.querySelector('.btn-danger').addEventListener('click', () => confirmDelete(meal.id, meal.name));
     el.appendChild(row);
   });
@@ -997,7 +1333,7 @@ document.getElementById('btn-import').addEventListener('click', async () => {
   const raw = document.getElementById('import-textarea').value.trim();
   const feedback = document.getElementById('import-feedback');
   const btn = document.getElementById('btn-import');
-  btn.textContent = 'Importing...'; btn.disabled = true;
+  btn.textContent = 'Importing…'; btn.disabled = true;
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error('Must be a JSON array');
@@ -1013,15 +1349,15 @@ document.getElementById('btn-import').addEventListener('click', async () => {
 });
 document.getElementById('btn-clear-import').addEventListener('click', () => { document.getElementById('import-textarea').value = ''; document.getElementById('import-feedback').style.display = 'none'; });
 
-// ── Recipe modal ───────────────────────────────────────────────────────────
+// ── Recipe modal ──────────────────────────────────────────────────────────
 function openModal(id) {
   const meal = meals.find(m => m.id === id); if (!meal) return;
   document.getElementById('modal-body').innerHTML = `
-    <span class="card-type-tag tag-${meal.type}" style="display:inline-block;margin-bottom:8px">${meal.type}</span>
+    <span class="modal-type-tag tag-${meal.type}">${meal.type}</span>
     <div class="modal-title">${meal.name}</div>
     <div class="modal-protein">Protein: ${meal.protein}</div>
     <div class="modal-section-title">Ingredients</div>
-    <ul class="ingredients-list">${meal.ingredients.map(i=>`<li><span class="item-name">${i.name}</span><span class="ing-amount">${i.amount}</span></li>`).join('')}</ul>
+    <ul class="ingredients-list">${meal.ingredients.map(i=>`<li><span>${i.name}</span><span class="ing-amount">${i.amount}</span></li>`).join('')}</ul>
     <div class="modal-section-title">Method</div>
     <ol class="steps-list">${meal.steps.map((s,i)=>`<li><span class="step-num">${i+1}</span><span>${s}</span></li>`).join('')}</ol>
   `;
@@ -1030,7 +1366,7 @@ function openModal(id) {
 document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
 document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); });
 
-// ── Keyboard shortcuts ─────────────────────────────────────────────────────
+// ── Keyboard shortcuts ────────────────────────────────────────────────────
 document.getElementById('create-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-create').click(); });
 document.getElementById('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('join-name').focus(); });
 document.getElementById('join-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-join').click(); });
