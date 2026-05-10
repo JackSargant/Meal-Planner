@@ -51,14 +51,67 @@ button { font-family: inherit; cursor: pointer; }
 }
 @media (min-width: 600px) {
   body {
-    background: radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.22 0.01 250) 0%, transparent 60%), var(--bg);
+    background: var(--bg);
     display: flex; align-items: center; justify-content: center;
     height: 100vh;
+    overflow: hidden;
+  }
+  /* Layered background scenery */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      /* top-left accent orb */
+      radial-gradient(ellipse 55% 45% at 12% 18%, oklch(0.84 0.17 85 / .07) 0%, transparent 70%),
+      /* bottom-right violet orb */
+      radial-gradient(ellipse 50% 55% at 88% 82%, oklch(0.78 0.14 295 / .08) 0%, transparent 65%),
+      /* centre depth haze */
+      radial-gradient(ellipse 80% 60% at 50% 50%, oklch(0.20 0.01 250) 0%, transparent 70%);
+  }
+  /* Dot grid */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(circle, oklch(0.40 0.008 250 / .55) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+  /* Floating decorative rings */
+  .bg-ring {
+    position: fixed; border-radius: 50%;
+    border: .5px solid oklch(0.84 0.17 85 / .06);
+    pointer-events: none; z-index: 0;
+    animation: ringFloat 18s ease-in-out infinite;
+  }
+  .bg-ring-1 { width: 500px; height: 500px; top: -180px; left: -160px; animation-delay: 0s; }
+  .bg-ring-2 { width: 360px; height: 360px; top: -100px; left: -60px; border-color: oklch(0.78 0.14 295 / .07); animation-delay: -6s; animation-duration: 22s; }
+  .bg-ring-3 { width: 420px; height: 420px; bottom: -150px; right: -120px; animation-delay: -11s; animation-duration: 20s; }
+  .bg-ring-4 { width: 280px; height: 280px; bottom: -80px; right: -40px; border-color: oklch(0.78 0.14 295 / .05); animation-delay: -4s; animation-duration: 26s; }
+  @keyframes ringFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%       { transform: translate(12px, -18px) scale(1.02); }
+    66%       { transform: translate(-8px, 10px) scale(0.98); }
+  }
+  /* Thin diagonal rule lines */
+  .bg-lines {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        -45deg,
+        oklch(0.84 0.17 85 / .025) 0,
+        oklch(0.84 0.17 85 / .025) 1px,
+        transparent 1px,
+        transparent 60px
+      );
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, black 100%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, black 100%);
   }
   .app {
     height: 920px;
     border-radius: 28px;
-    box-shadow: 0 0 0 1px var(--line), 0 40px 80px -20px rgba(0,0,0,.6);
+    box-shadow: 0 0 0 1px var(--line), 0 40px 80px -20px rgba(0,0,0,.7), 0 0 140px -30px oklch(0.84 0.17 85 / .08);
+    position: relative; z-index: 1;
   }
 }
 
@@ -488,6 +541,11 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 </style>
 </head>
 <body>
+<div class="bg-ring bg-ring-1"></div>
+<div class="bg-ring bg-ring-2"></div>
+<div class="bg-ring bg-ring-3"></div>
+<div class="bg-ring bg-ring-4"></div>
+<div class="bg-lines"></div>
 <div class="app">
 
 <!-- Loading -->
