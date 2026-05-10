@@ -517,26 +517,37 @@ document.getElementById('btn-create').addEventListener('click', async () => {
   const name = document.getElementById('create-name').value.trim();
   if (!name) { alert('Enter your name first'); return; }
 
-  sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  mySlot = 'player1';
+  const btn = document.getElementById('btn-create');
+  btn.textContent = 'Creating...';
+  btn.disabled = true;
 
-  const order = shuffle(meals).map(m => m.id);
-  mealQueue = order;
+  try {
+    sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    mySlot = 'player1';
 
-  await setDoc(sessionRef(), {
-    status: 'waiting',
-    createdAt: Date.now(),
-    player1: { name, done: false, swipes: {}, order },
-    player2: null,
-    matches: [],
-    finalWeek: []
-  });
+    const order = shuffle(meals).map(m => m.id);
+    mealQueue = order;
 
-  document.getElementById('display-code').textContent = sessionId;
-  const url = location.origin + location.pathname + '?s=' + sessionId;
-  document.getElementById('display-url').textContent = url;
-  showScreen('screen-waiting');
-  subscribeSession();
+    await setDoc(sessionRef(), {
+      status: 'waiting',
+      createdAt: Date.now(),
+      player1: { name, done: false, swipes: {}, order },
+      player2: null,
+      matches: [],
+      finalWeek: []
+    });
+
+    document.getElementById('display-code').textContent = sessionId;
+    const url = location.origin + location.pathname + '?s=' + sessionId;
+    document.getElementById('display-url').textContent = url;
+    showScreen('screen-waiting');
+    subscribeSession();
+  } catch (err) {
+    alert('Could not create session: ' + err.message);
+  } finally {
+    btn.textContent = 'Create week →';
+    btn.disabled = false;
+  }
 });
 
 // ── Join session ───────────────────────────────────────────────────────────
