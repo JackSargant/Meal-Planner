@@ -264,7 +264,7 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 #screen-swipe { position: relative; }
 .swipe-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px 10px; flex-shrink: 0;
+  padding: 10px 16px 8px; flex-shrink: 0;
   border-bottom: .5px solid var(--line);
 }
 .round-pill {
@@ -284,7 +284,7 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 .partner-bar {
   text-align: center; font-family: var(--font-mono); font-size: 10px;
   color: var(--ink-4); letter-spacing: 0.06em;
-  padding: 8px 20px; flex-shrink: 0;
+  padding: 4px 20px; flex-shrink: 0; min-height: 22px;
 }
 .partner-bar em { color: var(--accent); font-style: normal; }
 
@@ -292,13 +292,13 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 .swipe-main { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .deck-meta {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px 20px 4px; flex-shrink: 0;
+  padding: 6px 16px 2px; flex-shrink: 0;
 }
 .deck-count { font-family: var(--font-serif); font-size: 22px; line-height: 1; }
 .deck-count-total { color: var(--ink-4); font-size: 14px; }
 .deck-progress { flex: 1; height: 2px; background: var(--bg-elev-2); border-radius: 999px; overflow: hidden; }
 .deck-progress-fill { height: 100%; background: var(--accent); transition: width .35s cubic-bezier(.4,0,.2,1); }
-.deck-area { flex: 1; min-height: 0; padding: 8px 20px 0; display: flex; flex-direction: column; }
+.deck-area { flex: 1; min-height: 0; padding: 4px 16px 0; display: flex; flex-direction: column; }
 .deck-stack {
   position: relative; flex: 1; min-height: 0;
   user-select: none; -webkit-user-select: none; touch-action: none;
@@ -341,7 +341,7 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 .mc-foot {
   background: var(--bg-elev-1); border-top: .5px solid var(--line);
   display: flex; justify-content: space-between; align-items: center;
-  gap: 12px; padding: 14px 18px;
+  gap: 12px; padding: 10px 16px;
 }
 .mc-foot-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 3px; }
 .mc-foot-value { font-size: 14px; font-weight: 500; }
@@ -360,10 +360,10 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 /* Deck actions */
 .deck-actions {
   display: flex; justify-content: center; gap: 22px;
-  padding: 16px 20px 8px; flex-shrink: 0;
+  padding: 10px 20px 6px; flex-shrink: 0;
 }
 .deck-btn {
-  width: 62px; height: 62px; border-radius: 50%;
+  width: 56px; height: 56px; border-radius: 50%;
   border: .5px solid var(--line); background: var(--bg-elev-2);
   color: var(--ink); display: grid; place-items: center;
   transition: transform .12s, background .15s, color .15s, border-color .15s;
@@ -373,7 +373,7 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 .deck-btn-no:hover { color: oklch(0.72 0.16 25); border-color: oklch(0.72 0.16 25 / .5); }
 .deck-btn-yes { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .deck-btn-yes:hover { filter: brightness(1.1); }
-.deck-hint { text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 0 16px; flex-shrink: 0; }
+.deck-hint { text-align: center; font-family: var(--font-mono); font-size: 9px; color: var(--ink-4); letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 0 8px; flex-shrink: 0; }
 
 /* Mid panels */
 .mid-panel {
