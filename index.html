@@ -607,9 +607,6 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
       <button class="btn-primary" id="btn-join">Join</button>
     </div>
 
-    <div class="lobby-footer">
-      <button class="btn-ghost" id="btn-manage-meals">Manage meals</button>
-    </div>
   </div>
 </div>
 
@@ -1350,8 +1347,19 @@ document.getElementById('btn-new-week').addEventListener('click', () => {
   showScreen('screen-lobby');
 });
 
-// ── Meals management ──────────────────────────────────────────────────────
-document.getElementById('btn-manage-meals').addEventListener('click', () => { renderMealsList(); showScreen('screen-meals'); });
+// ── Meals management — hidden long-press on brand logo ────────────────────
+(function() {
+  const logo = document.querySelector('#screen-lobby .brand-mark');
+  let timer = null;
+  const start = () => { timer = setTimeout(() => { renderMealsList(); showScreen('screen-meals'); }, 600); };
+  const cancel = () => clearTimeout(timer);
+  logo.addEventListener('mousedown', start);
+  logo.addEventListener('touchstart', start, { passive: true });
+  logo.addEventListener('mouseup', cancel);
+  logo.addEventListener('mouseleave', cancel);
+  logo.addEventListener('touchend', cancel);
+  logo.addEventListener('touchcancel', cancel);
+})();
 document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('screen-lobby'));
 
 function renderMealsList() {
