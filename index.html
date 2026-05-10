@@ -77,35 +77,21 @@ button { font-family: inherit; cursor: pointer; }
     mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
     -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
   }
-  /* Floating decorative rings */
-  .bg-ring {
-    position: fixed; border-radius: 50%;
-    border: .5px solid oklch(0.84 0.17 85 / .06);
+  /* SVG wave lines */
+  .bg-waves {
+    position: fixed; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
-    animation: ringFloat 18s ease-in-out infinite;
   }
-  .bg-ring-1 { width: 500px; height: 500px; top: -180px; left: -160px; animation-delay: 0s; }
-  .bg-ring-2 { width: 360px; height: 360px; top: -100px; left: -60px; border-color: oklch(0.78 0.14 295 / .07); animation-delay: -6s; animation-duration: 22s; }
-  .bg-ring-3 { width: 420px; height: 420px; bottom: -150px; right: -120px; animation-delay: -11s; animation-duration: 20s; }
-  .bg-ring-4 { width: 280px; height: 280px; bottom: -80px; right: -40px; border-color: oklch(0.78 0.14 295 / .05); animation-delay: -4s; animation-duration: 26s; }
-  @keyframes ringFloat {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33%       { transform: translate(12px, -18px) scale(1.02); }
-    66%       { transform: translate(-8px, 10px) scale(0.98); }
+  .bg-wave-path {
+    animation: waveDrift 24s ease-in-out infinite;
+    transform-origin: 50% 50%;
   }
-  /* Thin diagonal rule lines */
-  .bg-lines {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image:
-      repeating-linear-gradient(
-        -45deg,
-        oklch(0.84 0.17 85 / .025) 0,
-        oklch(0.84 0.17 85 / .025) 1px,
-        transparent 1px,
-        transparent 60px
-      );
-    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, black 100%);
-    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, black 100%);
+  .bg-wave-path-2 { animation-delay: -8s; animation-duration: 30s; }
+  .bg-wave-path-3 { animation-delay: -16s; animation-duration: 20s; }
+  .bg-wave-path-4 { animation-delay: -4s; animation-duration: 28s; }
+  @keyframes waveDrift {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-18px); }
   }
   .app {
     height: 920px;
@@ -541,11 +527,17 @@ textarea { min-height: 200px; font-family: var(--font-mono); font-size: 12px; li
 </style>
 </head>
 <body>
-<div class="bg-ring bg-ring-1"></div>
-<div class="bg-ring bg-ring-2"></div>
-<div class="bg-ring bg-ring-3"></div>
-<div class="bg-ring bg-ring-4"></div>
-<div class="bg-lines"></div>
+<svg class="bg-waves" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <!-- Primary crossing waves -->
+  <path class="bg-wave-path"   d="M-100,450 C250,100 550,800 800,450 C1050,100 1350,800 1700,450" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="1"   stroke-opacity="0.55"/>
+  <path class="bg-wave-path"   d="M-100,450 C250,800 550,100 800,450 C1050,800 1350,100 1700,450" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="1"   stroke-opacity="0.55"/>
+  <!-- Secondary waves — slightly offset for depth -->
+  <path class="bg-wave-path-2" d="M-100,440 C250,120 550,760 800,440 C1050,120 1350,760 1700,440" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="0.6" stroke-opacity="0.22"/>
+  <path class="bg-wave-path-2" d="M-100,460 C250,780 550,140 800,460 C1050,780 1350,140 1700,460" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="0.6" stroke-opacity="0.22"/>
+  <!-- Outermost faint echoes -->
+  <path class="bg-wave-path-3" d="M-100,430 C250,50  550,830 800,430 C1050,50  1350,830 1700,430" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="0.5" stroke-opacity="0.10"/>
+  <path class="bg-wave-path-4" d="M-100,470 C250,850 550,50  800,470 C1050,850 1350,50  1700,470" fill="none" stroke="oklch(0.84 0.17 85)" stroke-width="0.5" stroke-opacity="0.10"/>
+</svg>
 <div class="app">
 
 <!-- Loading -->
