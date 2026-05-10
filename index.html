@@ -213,6 +213,12 @@ textarea::placeholder { color: var(--muted); }
       <input type="text" id="join-name" placeholder="Your name" maxlength="20">
       <button class="btn-primary" id="btn-join">Join →</button>
     </div>
+    <div id="this-week-card" class="lobby-card" style="display:none;border-color:var(--accent);background:#1b2210">
+      <h2>This week</h2>
+      <p id="this-week-desc" style="color:var(--muted)"></p>
+      <button class="btn-primary" id="btn-view-this-week">View this week →</button>
+      <button class="btn-ghost" id="btn-clear-this-week" style="text-align:center">Clear</button>
+    </div>
     <div class="lobby-footer">
       <button class="btn-ghost" id="btn-manage-meals">Manage meals</button>
     </div>
@@ -575,11 +581,45 @@ async function init() {
     alert('Failed to load meals: ' + err.message);
   }
   const params = new URLSearchParams(location.search);
+  if (params.get('view')) {
+    // Direct link to a completed week
+    const sid = params.get('view').toUpperCase();
+    try {
+      const snap = await getDoc(doc(db, 'sessions', sid));
+      if (snap.exists() && snap.data().status === 'complete') {
+        sessionId = sid;
+        showResults(snap.data());
+        return;
+      }
+    } catch (e) { /* fall through to lobby */ }
+  }
   if (params.get('s')) {
     document.getElementById('join-code').value = params.get('s').toUpperCase();
     setTimeout(() => document.getElementById('join-name').focus(), 100);
   }
+  checkSavedWeek();
   showScreen('screen-lobby');
+}
+
+function checkSavedWeek() {
+  const saved = localStorage.getItem('savedWeek');
+  if (!saved) return;
+  const { sid, label } = JSON.parse(saved);
+  document.getElementById('this-week-card').style.display = 'flex';
+  document.getElementById('this-week-desc').textContent = label;
+  document.getElementById('btn-view-this-week').addEventListener('click', async () => {
+    try {
+      const snap = await getDoc(doc(db, 'sessions', sid));
+      if (snap.exists()) { sessionId = sid; showResults(snap.data()); }
+      else { alert('This week\'s session could not be found.'); clearSavedWeek(); }
+    } catch (e) { alert('Could not load week: ' + e.message); }
+  });
+  document.getElementById('btn-clear-this-week').addEventListener('click', clearSavedWeek);
+}
+
+function clearSavedWeek() {
+  localStorage.removeItem('savedWeek');
+  document.getElementById('this-week-card').style.display = 'none';
 }
 
 async function loadMeals() {
@@ -860,6 +900,16 @@ function showMatchToast(name) {
 // ── Results ────────────────────────────────────────────────────────────────
 function showResults(data) {
   showScreen('screen-results');
+
+  // Save session and update URL so either player can bookmark/return
+  if (sessionId) {
+    const label = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    localStorage.setItem('savedWeek', JSON.stringify({ sid: sessionId, label: 'Week of ' + label }));
+    const url = location.origin + location.pathname + '?view=' + sessionId;
+    history.pushState({}, '', url);
+    document.getElementById('results-sub').dataset.url = url;
+  }
+
   const final = data.finalWeek || [];
   const matched = final.filter(id => (data.matches || []).includes(id));
   const auto = final.filter(id => !(data.matches || []).includes(id));
@@ -979,6 +1029,7 @@ document.getElementById('btn-new-week').addEventListener('click', () => {
   document.getElementById('all-done-panel').style.display = 'none';
   document.getElementById('shopping-wrap').style.display = 'none';
   document.getElementById('btn-toggle-shopping').textContent = '🛒 Shopping list';
+  clearSavedWeek();
   history.pushState({}, '', location.pathname);
   showScreen('screen-lobby');
 });
