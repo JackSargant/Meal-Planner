@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #c8f04a;
+    --accent2: #f0a84a;
+    --text: #f0ede8;
+    --text-muted: #888;
+    --red: #e05a5a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f0f; color: #f0ede8; font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px; border-bottom: 1px solid #2e2e2e;
+    position: sticky; top: 0; background: rgba(15,15,15,0.95);
+    backdrop-filter: blur(10px); z-index: 100;
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #c8f04a; letter-spacing: -0.02em; }
+  .nav-tabs { display: flex; gap: 4px; background: #1a1a1a; padding: 4px; border-radius: 10px; }
+  .nav-tab { padding: 8px 20px; border-radius: 7px; border: none; background: transparent; color: #888888; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .nav-tab.active { background: #c8f04a; color: #0f0f0f; }
+  .nav-tab:hover:not(.active) { color: #f0ede8; background: #242424; }
+  .list-count { background: #f0a84a; color: #0f0f0f; border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+  .list-count:hover { opacity: 0.85; }
+
+  .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,15,0.97); backdrop-filter: blur(12px); border-top: 1px solid #2e2e2e; z-index: 100; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); }
+  .bottom-nav-inner { display: flex; justify-content: space-around; align-items: center; }
+  .bottom-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: #888888; font-family: 'DM Sans', sans-serif; font-size: 0.65rem; font-weight: 500; cursor: pointer; padding: 6px 20px; border-radius: 10px; transition: all 0.2s; position: relative; }
+  .bottom-tab .tab-icon { font-size: 1.3rem; line-height: 1; }
+  .bottom-tab.active { color: #c8f04a; }
+  .badge { position: absolute; top: 2px; right: 12px; background: #f0a84a; color: #0f0f0f; font-size: 0.6rem; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .badge.hidden { display: none; }
+
+  .view { display: none; padding: 32px; max-width: 1200px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; }
+  .section-sub { color: #888888; font-size: 0.85rem; }
+  .sub-label { font-size: 0.75rem; font-weight: 500; color: #888888; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 12px; margin-top: 8px; }
+
+  .meals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 48px; }
+  .meal-card { background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 14px; padding: 20px; transition: all 0.2s; position: relative; overflow: hidden; }
+  .meal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #c8f04a; transform: scaleX(0); transition: transform 0.2s; transform-origin: left; }
+  .meal-card:hover { border-color: #444; transform: translateY(-2px); }
+  .meal-card:hover::before { transform: scaleX(1); }
+  .meal-card.selected { border-color: #c8f04a; background: #1e2310; }
+  .meal-card.selected::before { transform: scaleX(1); }
+
+  .meal-type-tag { display: inline-block; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; }
+  .tag-lunch { background: #2a1f3d; color: #c4a0ff; }
+  .tag-dinner { background: #1f2d1f; color: #c8f04a; }
+  .meal-name { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 400; margin-bottom: 8px; line-height: 1.3; }
+  .meal-protein { font-size: 0.78rem; color: #888888; margin-bottom: 14px; }
+  .meal-protein span { color: #f0a84a; font-weight: 500; }
+  .meal-footer { display: flex; align-items: center; justify-content: space-between; }
+  .view-recipe-btn { font-size: 0.78rem; color: #888888; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; transition: color 0.2s; text-decoration: underline; text-underline-offset: 3px; }
+  .view-recipe-btn:hover { color: #f0ede8; }
+  .select-btn { font-size: 0.78rem; padding: 6px 14px; border-radius: 6px; border: 1px solid #2e2e2e; background: transparent; color: #888888; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .select-btn:hover { border-color: #c8f04a; color: #c8f04a; }
+  .meal-card.selected .select-btn { background: #c8f04a; color: #0f0f0f; border-color: #c8f04a; font-weight: 500; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 18px; max-width: 640px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 32px; position: relative; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: #242424; border: none; color: #888888; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .modal-close:hover { background: #2e2e2e; color: #f0ede8; }
+  .modal-tag { margin-bottom: 12px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 6px; line-height: 1.2; }
+  .modal-protein { color: #f0a84a; font-size: 0.85rem; margin-bottom: 24px; }
+  .modal-section-title { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #888888; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2e2e2e; }
+  .ingredients-list { list-style: none; margin-bottom: 24px; }
+  .ingredients-list li { padding: 8px 0; border-bottom: 1px solid #2e2e2e; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+  .ingredients-list li:last-child { border-bottom: none; }
+  .ing-amount { color: #c8f04a; font-weight: 500; font-size: 0.82rem; white-space: nowrap; margin-left: 16px; }
+  .steps-list { list-style: none; margin-bottom: 24px; }
+  .steps-list li { display: flex; gap: 14px; padding: 10px 0; font-size: 0.88rem; line-height: 1.6; border-bottom: 1px solid #2e2e2e; }
+  .steps-list li:last-child { border-bottom: none; }
+  .step-num { color: #c8f04a; font-family: 'Playfair Display', serif; font-size: 1.1rem; min-width: 24px; font-weight: 700; }
+  .modal-add-btn { width: 100%; padding: 14px; background: #c8f04a; color: #0f0f0f; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+  .modal-add-btn:hover { opacity: 0.85; }
+  .modal-add-btn.selected { background: #242424; color: #888888; }
+
+  .empty-state { text-align: center; padding: 80px 20px; color: #888888; }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+  .empty-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #f0ede8; margin-bottom: 8px; }
+  .empty-sub { font-size: 0.88rem; }
+
+  .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 12px; flex-wrap: wrap; }
+  .selected-meals-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .meal-pill { background: #242424; border: 1px solid #2e2e2e; border-radius: 20px; padding: 4px 12px 4px 10px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
+  .pill-remove { background: none; border: none; color: #888888; cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0; transition: color 0.2s; }
+  .pill-remove:hover { color: #e05a5a; }
+
+  .shopping-section { margin-bottom: 28px; }
+  .shopping-section-title { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #f0a84a; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #2e2e2e; }
+  .shopping-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1e1e1e; font-size: 0.88rem; transition: opacity 0.2s; cursor: pointer; }
+  .shopping-item.checked { opacity: 0.4; text-decoration: line-through; }
+  .shopping-item input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 1px solid #2e2e2e; border-radius: 5px; cursor: pointer; flex-shrink: 0; position: relative; transition: all 0.15s; }
+  .shopping-item input[type="checkbox"]:checked { background: #c8f04a; border-color: #c8f04a; }
+  .shopping-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; color: #0f0f0f; font-weight: 700; }
+  .item-name { flex: 1; }
+  .item-amount { color: #c8f04a; font-size: 0.8rem; font-weight: 500; }
+
+  .copy-btn { padding: 10px 20px; background: #242424; border: 1px solid #2e2e2e; color: #f0ede8; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+  .copy-btn:hover { border-color: #c8f04a; color: #c8f04a; }
+
+  .import-container { max-width: 720px; }
+  .import-desc { color: #888888; font-size: 0.9rem; line-height: 1.7; margin-bottom: 28px; }
+  .import-desc code { background: #242424; padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; color: #c8f04a; font-family: monospace; }
+  textarea { width: 100%; min-height: 300px; background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 12px; padding: 16px; color: #f0ede8; font-family: monospace; font-size: 0.82rem; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+  textarea:focus { border-color: #c8f04a; }
+  .import-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+  .import-btn { padding: 12px 24px; background: #c8f04a; color: #0f0f0f; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+  .import-btn:hover { opacity: 0.85; }
+  .clear-btn { padding: 12px 24px; background: transparent; border: 1px solid #2e2e2e; color: #888888; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; }
+  .clear-btn:hover { border-color: #e05a5a; color: #e05a5a; }
+  .import-feedback { padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; display: none; }
+  .import-feedback.success { background: #1e2d10; border: 1px solid #3a5a1a; color: #c8f04a; }
+  .import-feedback.error { background: #2d1010; border: 1px solid #5a1a1a; color: #e05a5a; }
+  .template-box { margin-top: 32px; background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 12px; padding: 20px; }
+  .template-title { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #888888; margin-bottom: 12px; }
+  .template-code { background: #242424; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.75rem; color: #aaa; line-height: 1.8; white-space: pre-wrap; overflow-x: auto; }
+
+  .week-active-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 8px; }
+  .week-meal-item { background: #1e2310; border: 1px solid #c8f04a; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .week-meal-info { flex: 1; min-width: 0; }
+  .week-meal-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+  .week-meal-meta { font-size: 0.72rem; color: #888; }
+  .week-meal-meta span { color: #f0a84a; }
+  .remove-week-btn { background: none; border: 1px solid #2e2e2e; color: #888; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+  .remove-week-btn:hover { border-color: #e05a5a; color: #e05a5a; }
+
+  .history-week { margin-bottom: 28px; }
+  .history-week-label { font-size: 0.72rem; font-weight: 500; color: #f0a84a; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #2e2e2e; }
+  .history-meal-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e1e1e; gap: 12px; }
+  .history-meal-name { font-size: 0.88rem; flex: 1; min-width: 0; }
+  .add-back-btn { font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; border: 1px solid #2e2e2e; background: transparent; color: #888; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; flex-shrink: 0; white-space: nowrap; }
+  .add-back-btn:hover { border-color: #c8f04a; color: #c8f04a; }
+  .add-back-btn.in-list { background: #c8f04a; color: #0f0f0f; border-color: #c8f04a; font-weight: 500; }
+  .new-week-btn { padding: 10px 20px; background: transparent; border: 1px solid #2e2e2e; color: #888; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+  .new-week-btn:hover { border-color: #c8f04a; color: #c8f04a; }
+  .week-empty { color: #888; font-size: 0.88rem; padding: 20px 0 8px; }
+
+  @media (max-width: 640px) {
+    nav { padding: 12px 16px; }
+    .nav-tabs { display: none; }
+    .list-count { display: none; }
+    .bottom-nav { display: block; }
+    .view { padding: 16px 16px 90px; }
+    .section-title { font-size: 1.5rem; }
+    .meals-grid { grid-template-columns: 1fr; gap: 12px; }
+    .modal { padding: 20px; border-radius: 18px 18px 0 0; max-height: 90vh; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .list-header { flex-direction: column; align-items: flex-start; }
+    .copy-btn { width: 100%; text-align: center; }
+    .import-container { max-width: 100%; }
+    textarea { min-height: 200px; }
+    .import-actions { flex-direction: column; }
+    .import-btn, .clear-btn { width: 100%; text-align: center; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🥦 Planner</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('meals')">Meals</button>
+    <button class="nav-tab" onclick="showView('week')">My Week</button>
+    <button class="nav-tab" onclick="showView('list')">Shopping List</button>
+    <button class="nav-tab" onclick="showView('import')">Import</button>
+  </div>
+  <div class="list-count" onclick="showView('list')">
+    <span id="list-count">0</span> selected
+  </div>
+</nav>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-tab active" id="btab-meals" onclick="showView('meals')">
+      <span class="tab-icon">🍽️</span>Meals
+    </button>
+    <button class="bottom-tab" id="btab-week" onclick="showView('week')">
+      <span class="tab-icon">📅</span>My Week
+    </button>
+    <button class="bottom-tab" id="btab-list" onclick="showView('list')">
+      <span class="tab-icon">🛒</span>List
+      <span class="badge hidden" id="mobile-badge">0</span>
+    </button>
+    <button class="bottom-tab" id="btab-import" onclick="showView('import')">
+      <span class="tab-icon">📥</span>Import
+    </button>
+  </div>
+</nav>
+
+<div id="view-meals" class="view active">
+  <div class="section-header">
+    <h1 class="section-title">This Week</h1>
+    <span class="section-sub">Select meals to build your shopping list</span>
+  </div>
+  <div class="sub-label">Lunch</div>
+  <div id="lunch-grid" class="meals-grid"></div>
+  <div class="sub-label">Dinners</div>
+  <div id="dinner-grid" class="meals-grid"></div>
+</div>
+
+<div id="view-list" class="view">
+  <div id="list-empty" class="empty-state">
+    <div class="empty-icon">🛒</div>
+    <div class="empty-title">No meals selected yet</div>
+    <div class="empty-sub">Head to Meals and select what you are cooking this week</div>
+  </div>
+  <div id="list-content" style="display:none">
+    <div class="list-header">
+      <h1 class="section-title" style="font-size:1.8rem">Shopping List</h1>
+      <button class="copy-btn" onclick="copyList()">Copy as text</button>
+    </div>
+    <div id="selected-pills" class="selected-meals-pills"></div>
+    <div id="shopping-sections"></div>
+  </div>
+</div>
+
+<div id="view-week" class="view">
+  <div class="list-header">
+    <div>
+      <h1 class="section-title">My Week</h1>
+      <span class="section-sub">Your plan and meal history</span>
+    </div>
+    <button class="new-week-btn" onclick="startNewWeek()">Start New Week</button>
+  </div>
+  <div class="sub-label">Active This Week</div>
+  <div id="week-active"></div>
+  <div id="week-history-wrapper" style="margin-top:32px">
+    <div class="sub-label">Previous Meals</div>
+    <div id="week-history"></div>
+  </div>
+</div>
+
+<div id="view-import" class="view">
+  <div class="import-container">
+    <div class="section-header">
+      <h1 class="section-title">Import Meals</h1>
+    </div>
+    <p class="import-desc">
+      Paste meals in JSON format below. Ask Claude to generate meals in this format and paste the result here.
+      Say something like: <code>give me 3 new vegan dinner ideas in the meal planner JSON format</code>
+    </p>
+    <textarea id="import-textarea" placeholder="Paste JSON here..."></textarea>
+    <div class="import-actions">
+      <button class="import-btn" onclick="importMeals()">Import Meals</button>
+      <button class="clear-btn" onclick="document.getElementById('import-textarea').value=''">Clear</button>
+    </div>
+    <div id="import-feedback" class="import-feedback"></div>
+    <div class="template-box">
+      <div class="template-title">JSON Format — copy this when asking Claude for new meals</div>
+      <div class="template-code">[
+  {
+    "id": "unique-id",
+    "name": "Meal Name",
+    "type": "lunch or dinner",
+    "protein": "Main protein source",
+    "ingredients": [
+      { "name": "Ingredient name", "amount": "quantity" }
+    ],
+    "steps": [
+      "Step one instruction",
+      "Step two instruction"
+    ]
+  }
+]</div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal-overlay">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" id="modal-close-btn">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+var meals = [
+  {
+    id: "chickpea-pasta-salad",
+    name: "Smoky Chickpea & Roasted Pepper Pasta Salad",
+    type: "lunch",
+    protein: "Chickpeas",
+    ingredients: [
+      { name: "Fusilli or penne pasta", amount: "500g" },
+      { name: "Chickpeas (tinned)", amount: "2 x 400g" },
+      { name: "Roasted red peppers (jar)", amount: "1 jar" },
+      { name: "Sun-dried tomatoes (jar)", amount: "1 jar" },
+      { name: "Baby spinach", amount: "100g" },
+      { name: "Red onion", amount: "1 large" },
+      { name: "Smoked paprika", amount: "2 tsp" },
+      { name: "Olive oil", amount: "3 tbsp" },
+      { name: "Lemon", amount: "1" },
+      { name: "Franks Red Hot sauce", amount: "2 tbsp" },
+      { name: "Salt and pepper", amount: "to taste" }
+    ],
+    steps: [
+      "Cook pasta according to packet instructions, drain and cool under cold water.",
+      "Drain chickpeas and roasted peppers, roughly chop the peppers.",
+      "Finely slice red onion and sun-dried tomatoes.",
+      "Make the dressing: whisk olive oil, lemon juice, hot sauce, smoked paprika, salt and pepper.",
+      "Combine pasta, chickpeas, peppers, sun-dried tomatoes, spinach and red onion.",
+      "Pour dressing over everything and toss well to coat.",
+      "Portion into 10 containers. Keeps in the fridge for up to 4 days."
+    ]
+  },
+  {
+    id: "lasagne",
+    name: "Vegan Lasagne and Garlic Bread",
+    type: "dinner",
+    protein: "Quorn Vegan Mince",
+    ingredients: [
+      { name: "Quorn Vegan Mince", amount: "500g" },
+      { name: "Lasagne sheets", amount: "1 pack" },
+      { name: "Chopped tomatoes", amount: "2 x 400g" },
+      { name: "Passata", amount: "500g" },
+      { name: "Garlic cloves", amount: "4" },
+      { name: "White onion", amount: "1" },
+      { name: "Mixed herbs", amount: "2 tsp" },
+      { name: "Oat milk", amount: "500ml" },
+      { name: "Flora plant butter", amount: "40g" },
+      { name: "Plain flour", amount: "40g" },
+      { name: "Violife grated cheese", amount: "100g" },
+      { name: "Vegan garlic bread", amount: "1 pack" }
+    ],
+    steps: [
+      "Fry onion and garlic in a little oil until soft, about 5 mins.",
+      "Add mince and cook for 3-4 minutes, breaking it up.",
+      "Add chopped tomatoes, passata and mixed herbs. Simmer for 15 minutes.",
+      "Make white sauce: melt butter, stir in flour to make a paste, gradually add oat milk whisking constantly until thick and smooth.",
+      "Layer mince, lasagne sheets and white sauce in a deep dish. Finish with white sauce and grated cheese.",
+      "Bake at 190C for 35-40 minutes until golden and bubbling.",
+      "Cook garlic bread in the last 10 minutes. Rest lasagne for 5 minutes before serving."
+    ]
+  },
+  {
+    id: "black-bean-tacos",
+    name: "Smoky Black Bean Tacos with Slaw",
+    type: "dinner",
+    protein: "Black Beans",
+    ingredients: [
+      { name: "Black beans (tinned)", amount: "2 x 400g" },
+      { name: "Small flour tortillas", amount: "1 pack" },
+      { name: "Coleslaw mix", amount: "1 bag" },
+      { name: "Smoked paprika", amount: "2 tsp" },
+      { name: "Ground cumin", amount: "1 tsp" },
+      { name: "Garlic cloves", amount: "2" },
+      { name: "Lime", amount: "1" },
+      { name: "Franks Red Hot sauce", amount: "to taste" },
+      { name: "Spring onions", amount: "4" },
+      { name: "Fresh coriander", amount: "small bunch" },
+      { name: "Olive oil", amount: "1 tbsp" }
+    ],
+    steps: [
+      "Drain and rinse black beans. Fry with crushed garlic, paprika and cumin in olive oil for 5 minutes until fragrant.",
+      "Lightly mash about half the beans with a fork to create a chunky texture.",
+      "Season the coleslaw mix with lime juice, hot sauce, salt and a little olive oil.",
+      "Warm tortillas in a dry pan or directly over a gas flame.",
+      "Load tortillas with beans, slaw, spring onions and coriander.",
+      "Finish with a squeeze of lime and as much hot sauce as you like."
+    ]
+  },
+  {
+    id: "tikka-masala",
+    name: "Vegan Tikka Masala with Flatbread",
+    type: "dinner",
+    protein: "Tofu",
+    ingredients: [
+      { name: "Firm tofu", amount: "400g" },
+      { name: "Tikka Masala paste", amount: "3 tbsp" },
+      { name: "Chopped tomatoes", amount: "1 x 400g" },
+      { name: "Coconut milk", amount: "1 x 400ml" },
+      { name: "White onion", amount: "1" },
+      { name: "Garlic cloves", amount: "3" },
+      { name: "Fresh ginger", amount: "thumb-sized piece" },
+      { name: "Baby spinach", amount: "large handful" },
+      { name: "Flatbreads", amount: "4" },
+      { name: "Fresh coriander", amount: "small bunch" },
+      { name: "Olive oil", amount: "1 tbsp" }
+    ],
+    steps: [
+      "Press tofu dry with kitchen paper, cut into 2cm cubes.",
+      "Fry tofu in oil until golden on all sides, about 8 minutes. Set aside.",
+      "Fry onion until soft, add garlic and ginger and cook for 2 minutes.",
+      "Add tikka masala paste and stir for 1 minute until fragrant.",
+      "Add chopped tomatoes and coconut milk, stir to combine. Simmer for 12 minutes.",
+      "Return tofu to the pan, add spinach and stir until wilted.",
+      "Warm flatbreads. Serve curry topped with fresh coriander."
+    ]
+  },
+  {
+    id: "sausage-casserole",
+    name: "Vegan Sausage Casserole with Crusty Bread",
+    type: "dinner",
+    protein: "Quorn Vegan Sausages",
+    ingredients: [
+      { name: "Quorn Vegan Sausages", amount: "12 sausages" },
+      { name: "Chopped tomatoes", amount: "1 x 400g" },
+      { name: "Butter beans (tinned)", amount: "1 x 400g" },
+      { name: "Red onion", amount: "1" },
+      { name: "Mixed peppers", amount: "2" },
+      { name: "Garlic cloves", amount: "3" },
+      { name: "Smoked paprika", amount: "1 tsp" },
+      { name: "Mixed herbs", amount: "1 tsp" },
+      { name: "Vegetable stock", amount: "200ml" },
+      { name: "Tomato puree", amount: "1 tbsp" },
+      { name: "Sourdough or crusty loaf", amount: "1" }
+    ],
+    steps: [
+      "Brown sausages in a little oil for 5-6 minutes, turning. Set aside.",
+      "Fry onion and peppers until softened, about 6 minutes. Add garlic and cook 1 minute more.",
+      "Add paprika, herbs and tomato puree, stir for 30 seconds.",
+      "Add chopped tomatoes, stock and butter beans. Stir well.",
+      "Return sausages to the pan, pushing them into the sauce.",
+      "Simmer for 20 minutes until the sauce has thickened.",
+      "Serve with thick slices of crusty bread to mop up the sauce."
+    ]
+  },
+  {
+    id: "mushroom-pasta",
+    name: "Creamy Mushroom and Spinach Pasta",
+    type: "dinner",
+    protein: "Butter Beans and Mushrooms",
+    ingredients: [
+      { name: "Chestnut mushrooms", amount: "400g" },
+      { name: "Butter beans (tinned)", amount: "1 x 400g" },
+      { name: "Pasta (any shape)", amount: "300g" },
+      { name: "Baby spinach", amount: "large handful" },
+      { name: "Garlic cloves", amount: "4" },
+      { name: "Oat milk", amount: "200ml" },
+      { name: "Vegetable stock", amount: "100ml" },
+      { name: "Plain flour", amount: "1 tbsp" },
+      { name: "Flora plant butter", amount: "20g" },
+      { name: "Violife grated cheese", amount: "50g" },
+      { name: "Chilli flakes", amount: "pinch" }
+    ],
+    steps: [
+      "Cook pasta according to packet instructions. Reserve a cup of pasta water before draining.",
+      "Slice mushrooms thickly. Fry in butter with garlic until golden and all moisture has evaporated, about 8-10 minutes.",
+      "Add flour and stir for 30 seconds. Gradually add oat milk and stock, stirring constantly.",
+      "Drain and add butter beans, simmer for 3 minutes until sauce thickens.",
+      "Add drained pasta and spinach, toss to coat. Use pasta water to loosen if needed.",
+      "Serve topped with vegan cheese and a pinch of chilli flakes."
+    ]
+  },
+  {
+    id: "butter-bean-stew",
+    name: "Butter Bean and Tomato Stew with Pitta",
+    type: "dinner",
+    protein: "Butter Beans",
+    ingredients: [
+      { name: "Butter beans (tinned)", amount: "2 x 400g" },
+      { name: "Chopped tomatoes", amount: "1 x 400g" },
+      { name: "Cherry tomatoes", amount: "1 punnet" },
+      { name: "Red onion", amount: "1" },
+      { name: "Garlic cloves", amount: "4" },
+      { name: "Smoked paprika", amount: "1 tsp" },
+      { name: "Ground cumin", amount: "1 tsp" },
+      { name: "Chilli flakes", amount: "pinch" },
+      { name: "Baby spinach", amount: "large handful" },
+      { name: "Lemon", amount: "1" },
+      { name: "Pitta breads", amount: "4" },
+      { name: "Fresh coriander", amount: "small bunch" }
+    ],
+    steps: [
+      "Fry onion until soft and golden, about 7 minutes. Add garlic, paprika, cumin and chilli flakes.",
+      "Add cherry tomatoes and cook until they start to burst, about 4 minutes.",
+      "Add chopped tomatoes and butter beans. Stir and simmer for 15 minutes.",
+      "Season well with salt, pepper and a good squeeze of lemon juice.",
+      "Stir in spinach until wilted. Taste and adjust seasoning.",
+      "Toast pittas. Serve stew with coriander scattered over and pitta alongside."
+    ]
+  }
+];
+
+var selectedMealIds = new Set(JSON.parse(localStorage.getItem('selectedMealIds') || '[]'));
+var weekHistory = JSON.parse(localStorage.getItem('weekHistory') || '[]');
+var currentModalId = null;
+
+function saveState() {
+  localStorage.setItem('selectedMealIds', JSON.stringify(Array.from(selectedMealIds)));
+  localStorage.setItem('weekHistory', JSON.stringify(weekHistory));
+}
+
+var AISLE_ORDER = ["Fruit & Veg", "Chilled", "Frozen", "Pasta & Bread", "Tins & Jars", "Dried & Spices", "Condiments"];
+
+function getCategory(name) {
+  var n = name.toLowerCase();
+  if (n.includes('pasta') || n.includes('lasagne sheet') || n.includes('tortilla') || n.includes('flatbread') || n.includes('pitta') || n.includes('bread') || n.includes('loaf') || n.includes('bun')) return 'Pasta & Bread';
+  if (n.includes('tofu') || n.includes('mince') || n.includes('sausage') || n.includes('oat milk') || n.includes('violife') || n.includes('flora')) return 'Chilled';
+  if (n.includes('onion') || n.includes('garlic') || n.includes('spinach') || n.includes('mushroom') || n.includes('cherry tomato') || n.includes('pepper') || n.includes('spring onion') || n.includes('coriander') || n.includes('ginger') || n.includes('lime') || n.includes('lemon') || n.includes('coleslaw')) return 'Fruit & Veg';
+  if (n.includes('chickpea') || n.includes('black bean') || n.includes('butter bean') || n.includes('chopped tomato') || n.includes('passata') || n.includes('coconut milk') || n.includes('sun-dried') || n.includes('roasted red pepper') || n.includes('tikka') || n.includes('tomato puree')) return 'Tins & Jars';
+  if (n.includes('paprika') || n.includes('cumin') || n.includes('herb') || n.includes('flour') || n.includes('chilli') || n.includes('stock') || n.includes('garam') || n.includes('salt') || n.includes('pepper')) return 'Dried & Spices';
+  if (n.includes('oil') || n.includes('frank') || n.includes('hot sauce') || n.includes('soy') || n.includes('ketchup') || n.includes('sauce')) return 'Condiments';
+  return 'Tins & Jars';
+}
+
+function renderMeals() {
+  var lunchGrid = document.getElementById('lunch-grid');
+  var dinnerGrid = document.getElementById('dinner-grid');
+  lunchGrid.innerHTML = '';
+  dinnerGrid.innerHTML = '';
+
+  meals.forEach(function(meal) {
+    var card = document.createElement('div');
+    var isSelected = selectedMealIds.has(meal.id);
+    card.className = 'meal-card' + (isSelected ? ' selected' : '');
+
+    var tag = document.createElement('div');
+    tag.className = 'meal-type-tag tag-' + meal.type;
+    tag.textContent = meal.type;
+
+    var name = document.createElement('div');
+    name.className = 'meal-name';
+    name.textContent = meal.name;
+
+    var protein = document.createElement('div');
+    protein.className = 'meal-protein';
+    protein.innerHTML = 'Protein: <span>' + meal.protein + '</span>';
+
+    var footer = document.createElement('div');
+    footer.className = 'meal-footer';
+
+    var recipeBtn = document.createElement('button');
+    recipeBtn.className = 'view-recipe-btn';
+    recipeBtn.textContent = 'View recipe';
+    recipeBtn.dataset.id = meal.id;
+    recipeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openModal(this.dataset.id);
+    });
+
+    var selectBtn = document.createElement('button');
+    selectBtn.className = 'select-btn';
+    selectBtn.textContent = isSelected ? '✓ Selected' : 'Add to list';
+    selectBtn.dataset.id = meal.id;
+    selectBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleMeal(this.dataset.id);
+    });
+
+    footer.appendChild(recipeBtn);
+    footer.appendChild(selectBtn);
+    card.appendChild(tag);
+    card.appendChild(name);
+    card.appendChild(protein);
+    card.appendChild(footer);
+
+    if (meal.type === 'lunch') lunchGrid.appendChild(card);
+    else dinnerGrid.appendChild(card);
+  });
+
+  updateListCount();
+}
+
+function toggleMeal(id) {
+  if (selectedMealIds.has(id)) selectedMealIds.delete(id);
+  else selectedMealIds.add(id);
+  saveState();
+  renderMeals();
+  renderShoppingList();
+  renderWeekView();
+  if (currentModalId === id) updateModalBtn(id);
+}
+
+function openModal(id) {
+  var meal = meals.find(function(m) { return m.id === id; });
+  if (!meal) return;
+  currentModalId = id;
+
+  var body = document.getElementById('modal-body');
+  body.innerHTML = '';
+
+  var tagWrap = document.createElement('div');
+  tagWrap.className = 'modal-tag';
+  var tag = document.createElement('span');
+  tag.className = 'meal-type-tag tag-' + meal.type;
+  tag.textContent = meal.type;
+  tagWrap.appendChild(tag);
+
+  var title = document.createElement('div');
+  title.className = 'modal-title';
+  title.textContent = meal.name;
+
+  var protein = document.createElement('div');
+  protein.className = 'modal-protein';
+  protein.textContent = 'Protein source: ' + meal.protein;
+
+  var ingTitle = document.createElement('div');
+  ingTitle.className = 'modal-section-title';
+  ingTitle.textContent = 'Ingredients';
+
+  var ingList = document.createElement('ul');
+  ingList.className = 'ingredients-list';
+  meal.ingredients.forEach(function(ing) {
+    var li = document.createElement('li');
+    var n = document.createElement('span');
+    n.className = 'item-name';
+    n.textContent = ing.name;
+    var a = document.createElement('span');
+    a.className = 'ing-amount';
+    a.textContent = ing.amount;
+    li.appendChild(n);
+    li.appendChild(a);
+    ingList.appendChild(li);
+  });
+
+  var stepsTitle = document.createElement('div');
+  stepsTitle.className = 'modal-section-title';
+  stepsTitle.textContent = 'Method';
+
+  var stepsList = document.createElement('ol');
+  stepsList.className = 'steps-list';
+  meal.steps.forEach(function(step, i) {
+    var li = document.createElement('li');
+    var num = document.createElement('span');
+    num.className = 'step-num';
+    num.textContent = i + 1;
+    var txt = document.createElement('span');
+    txt.textContent = step;
+    li.appendChild(num);
+    li.appendChild(txt);
+    stepsList.appendChild(li);
+  });
+
+  var addBtn = document.createElement('button');
+  addBtn.id = 'modal-add-btn';
+  addBtn.className = 'modal-add-btn' + (selectedMealIds.has(id) ? ' selected' : '');
+  addBtn.textContent = selectedMealIds.has(id) ? '✓ Added to list' : '+ Add to shopping list';
+  addBtn.dataset.id = id;
+  addBtn.addEventListener('click', function() { toggleMeal(this.dataset.id); });
+
+  body.appendChild(tagWrap);
+  body.appendChild(title);
+  body.appendChild(protein);
+  body.appendChild(ingTitle);
+  body.appendChild(ingList);
+  body.appendChild(stepsTitle);
+  body.appendChild(stepsList);
+  body.appendChild(addBtn);
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function updateModalBtn(id) {
+  var btn = document.getElementById('modal-add-btn');
+  if (!btn) return;
+  var isSelected = selectedMealIds.has(id);
+  btn.textContent = isSelected ? '✓ Added to list' : '+ Add to shopping list';
+  btn.className = 'modal-add-btn' + (isSelected ? ' selected' : '');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentModalId = null;
+}
+
+function updateListCount() {
+  var count = selectedMealIds.size;
+  document.getElementById('list-count').textContent = count;
+  var badge = document.getElementById('mobile-badge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+function renderShoppingList() {
+  updateListCount();
+  var empty = document.getElementById('list-empty');
+  var content = document.getElementById('list-content');
+  if (selectedMealIds.size === 0) {
+    empty.style.display = 'block';
+    content.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  var pillsEl = document.getElementById('selected-pills');
+  pillsEl.innerHTML = '';
+  selectedMealIds.forEach(function(id) {
+    var meal = meals.find(function(m) { return m.id === id; });
+    var pill = document.createElement('div');
+    pill.className = 'meal-pill';
+    pill.textContent = meal.name + ' ';
+    var rm = document.createElement('button');
+    rm.className = 'pill-remove';
+    rm.textContent = '✕';
+    rm.dataset.id = id;
+    rm.addEventListener('click', function() { toggleMeal(this.dataset.id); });
+    pill.appendChild(rm);
+    pillsEl.appendChild(pill);
+  });
+
+  var byCategory = {};
+  selectedMealIds.forEach(function(id) {
+    var meal = meals.find(function(m) { return m.id === id; });
+    meal.ingredients.forEach(function(ing) {
+      var cat = getCategory(ing.name);
+      if (!byCategory[cat]) byCategory[cat] = [];
+      var exists = byCategory[cat].find(function(i) { return i.name.toLowerCase() === ing.name.toLowerCase(); });
+      if (!exists) byCategory[cat].push({ name: ing.name, amount: ing.amount });
+    });
+  });
+
+  var sectionsEl = document.getElementById('shopping-sections');
+  sectionsEl.innerHTML = '';
+  var orderedCats = AISLE_ORDER.filter(function(c) { return byCategory[c]; });
+  Object.keys(byCategory).forEach(function(c) { if (!AISLE_ORDER.includes(c)) orderedCats.push(c); });
+
+  orderedCats.forEach(function(cat) {
+    var section = document.createElement('div');
+    section.className = 'shopping-section';
+    var title = document.createElement('div');
+    title.className = 'shopping-section-title';
+    title.textContent = cat;
+    section.appendChild(title);
+    byCategory[cat].forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'shopping-item';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.addEventListener('change', function() {
+        row.classList.toggle('checked', this.checked);
+      });
+      var nameEl = document.createElement('span');
+      nameEl.className = 'item-name';
+      nameEl.textContent = item.name;
+      var amtEl = document.createElement('span');
+      amtEl.className = 'item-amount';
+      amtEl.textContent = item.amount;
+      row.appendChild(cb);
+      row.appendChild(nameEl);
+      row.appendChild(amtEl);
+      section.appendChild(row);
+    });
+    sectionsEl.appendChild(section);
+  });
+}
+
+function copyList() {
+  var selectedArr = Array.from(selectedMealIds);
+  var mealNames = selectedArr.map(function(id) { return meals.find(function(m) { return m.id === id; }).name; });
+  var text = 'Shopping List\nMeals: ' + mealNames.join(', ') + '\n\n';
+  var byCategory = {};
+  selectedArr.forEach(function(id) {
+    var meal = meals.find(function(m) { return m.id === id; });
+    meal.ingredients.forEach(function(ing) {
+      var cat = getCategory(ing.name);
+      if (!byCategory[cat]) byCategory[cat] = [];
+      var exists = byCategory[cat].find(function(i) { return i.name.toLowerCase() === ing.name.toLowerCase(); });
+      if (!exists) byCategory[cat].push({ name: ing.name, amount: ing.amount });
+    });
+  });
+  var orderedCats = AISLE_ORDER.filter(function(c) { return byCategory[c]; });
+  Object.keys(byCategory).forEach(function(c) { if (!AISLE_ORDER.includes(c)) orderedCats.push(c); });
+  orderedCats.forEach(function(cat) {
+    text += cat.toUpperCase() + '\n';
+    byCategory[cat].forEach(function(item) { text += '- ' + item.name + ' (' + item.amount + ')\n'; });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(function() { btn.textContent = 'Copy as text'; }, 2000);
+  });
+}
+
+function importMeals() {
+  var raw = document.getElementById('import-textarea').value.trim();
+  var feedback = document.getElementById('import-feedback');
+  try {
+    var parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error('Must be a JSON array');
+    var added = 0;
+    parsed.forEach(function(meal) {
+      if (!meal.id || !meal.name || !meal.type || !meal.ingredients || !meal.steps) {
+        throw new Error('Meal is missing required fields (id, name, type, ingredients, steps)');
+      }
+      var exists = meals.find(function(m) { return m.id === meal.id; });
+      if (!exists) { meals.push(meal); added++; }
+      else { Object.assign(exists, meal); }
+    });
+    feedback.className = 'import-feedback success';
+    feedback.textContent = 'Successfully imported ' + added + ' new meal' + (added !== 1 ? 's' : '') + '.';
+    feedback.style.display = 'block';
+    document.getElementById('import-textarea').value = '';
+    renderMeals();
+    setTimeout(function() { feedback.style.display = 'none'; }, 4000);
+  } catch(err) {
+    feedback.className = 'import-feedback error';
+    feedback.textContent = 'Import failed: ' + err.message;
+    feedback.style.display = 'block';
+  }
+}
+
+function startNewWeek() {
+  if (selectedMealIds.size === 0) return;
+  var date = new Date();
+  var label = 'Week of ' + date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  var mealEntries = Array.from(selectedMealIds).map(function(id) {
+    var m = meals.find(function(x) { return x.id === id; });
+    return m ? { id: m.id, name: m.name, type: m.type, protein: m.protein } : null;
+  }).filter(Boolean);
+  weekHistory.unshift({ label: label, meals: mealEntries });
+  selectedMealIds.clear();
+  saveState();
+  renderMeals();
+  renderShoppingList();
+  renderWeekView();
+}
+
+function renderWeekView() {
+  var activeEl = document.getElementById('week-active');
+  activeEl.innerHTML = '';
+
+  if (selectedMealIds.size === 0) {
+    activeEl.innerHTML = '<div class="week-empty">No meals selected yet — head to <strong>Meals</strong> and add some to your week.</div>';
+  } else {
+    var activeMeals = Array.from(selectedMealIds).map(function(id) {
+      return meals.find(function(m) { return m.id === id; });
+    }).filter(Boolean);
+
+    ['lunch', 'dinner'].forEach(function(type) {
+      var group = activeMeals.filter(function(m) { return m.type === type; });
+      if (group.length === 0) return;
+      var label = document.createElement('div');
+      label.className = 'sub-label';
+      label.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      activeEl.appendChild(label);
+      var grid = document.createElement('div');
+      grid.className = 'week-active-grid';
+      group.forEach(function(meal) {
+        var item = document.createElement('div');
+        item.className = 'week-meal-item';
+        var info = document.createElement('div');
+        info.className = 'week-meal-info';
+        var nameEl = document.createElement('div');
+        nameEl.className = 'week-meal-name';
+        nameEl.textContent = meal.name;
+        var meta = document.createElement('div');
+        meta.className = 'week-meal-meta';
+        meta.innerHTML = 'Protein: <span>' + meal.protein + '</span>';
+        info.appendChild(nameEl);
+        info.appendChild(meta);
+        var rm = document.createElement('button');
+        rm.className = 'remove-week-btn';
+        rm.title = 'Remove';
+        rm.textContent = '✕';
+        rm.dataset.id = meal.id;
+        rm.addEventListener('click', function() { toggleMeal(this.dataset.id); });
+        item.appendChild(info);
+        item.appendChild(rm);
+        grid.appendChild(item);
+      });
+      activeEl.appendChild(grid);
+    });
+  }
+
+  var histEl = document.getElementById('week-history');
+  histEl.innerHTML = '';
+
+  if (weekHistory.length === 0) {
+    histEl.innerHTML = '<div class="week-empty">No history yet. Use <em>Start New Week</em> to save your current week and begin tracking.</div>';
+    return;
+  }
+
+  var seen = new Set();
+  weekHistory.forEach(function(week) {
+    var section = document.createElement('div');
+    section.className = 'history-week';
+    var label = document.createElement('div');
+    label.className = 'history-week-label';
+    label.textContent = week.label;
+    section.appendChild(label);
+    week.meals.forEach(function(entry) {
+      var row = document.createElement('div');
+      row.className = 'history-meal-row';
+      var nameEl = document.createElement('div');
+      nameEl.className = 'history-meal-name';
+      nameEl.textContent = entry.name;
+      var typeTag = document.createElement('span');
+      typeTag.className = 'meal-type-tag tag-' + entry.type;
+      typeTag.textContent = entry.type;
+      var addBtn = document.createElement('button');
+      addBtn.className = 'add-back-btn' + (selectedMealIds.has(entry.id) ? ' in-list' : '');
+      addBtn.textContent = selectedMealIds.has(entry.id) ? '✓ In list' : '+ Add';
+      addBtn.dataset.id = entry.id;
+      addBtn.addEventListener('click', function() {
+        toggleMeal(this.dataset.id);
+      });
+      row.appendChild(nameEl);
+      row.appendChild(typeTag);
+      row.appendChild(addBtn);
+      section.appendChild(row);
+      seen.add(entry.id);
+    });
+    histEl.appendChild(section);
+  });
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.bottom-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('view-' + name).classList.add('active');
+  var idx = ['meals','week','list','import'].indexOf(name);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  var btab = document.getElementById('btab-' + name);
+  if (btab) btab.classList.add('active');
+  if (name === 'list') renderShoppingList();
+  if (name === 'week') renderWeekView();
+}
+
+renderMeals();
+</script>
+</body>
+</html>
