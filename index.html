@@ -16,6 +16,11 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
 
+/* ---- Loading ---- */
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ---- Lobby ---- */
 .lobby-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 24px; gap: 24px; }
 .logo { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--accent); letter-spacing: -0.02em; text-align: center; }
@@ -25,14 +30,24 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .lobby-card p { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
 .divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.78rem; max-width: 400px; width: 100%; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.lobby-footer { display: flex; justify-content: center; }
 
+/* ---- Inputs & Buttons ---- */
 input[type="text"] { width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
 input[type="text"]:focus { border-color: var(--accent); }
 input[type="text"]::placeholder { color: var(--muted); }
+textarea { width: 100%; min-height: 220px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; color: var(--text); font-family: monospace; font-size: 0.8rem; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.2s; }
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--muted); }
 .btn-primary { width: 100%; padding: 13px; background: var(--accent); color: #0f0f0f; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
 .btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-secondary { width: 100%; padding: 11px; background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-ghost { background: none; border: none; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 0; transition: color 0.2s; }
+.btn-ghost:hover { color: var(--text); }
+.btn-danger { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+.btn-danger:hover { border-color: var(--red); color: var(--red); }
 
 /* ---- Waiting ---- */
 .waiting-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 24px; gap: 20px; text-align: center; }
@@ -45,28 +60,25 @@ input[type="text"]::placeholder { color: var(--muted); }
 .share-code { font-family: monospace; font-size: 2.2rem; letter-spacing: 0.25em; color: var(--accent); text-align: center; }
 .share-url { font-size: 0.72rem; color: var(--muted); word-break: break-all; text-align: center; }
 
-/* ---- Swipe screen ---- */
+/* ---- Swipe ---- */
 .swipe-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .logo-sm { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--accent); }
 .match-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
 .match-badge .count { color: var(--accent); font-weight: 600; }
-.btn-recipe-sm { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+.btn-recipe-sm { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .btn-recipe-sm:hover { border-color: var(--muted); color: var(--text); }
 .partner-status { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 8px 20px; min-height: 30px; flex-shrink: 0; }
 .partner-status span { color: var(--accent2); }
-
 .card-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 24px 0; }
 .card-stack { position: relative; width: min(340px, 88vw); height: min(420px, 56vh); }
 .swipe-card { position: absolute; inset: 0; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; user-select: none; touch-action: none; }
 .swipe-card.top { z-index: 2; cursor: grab; }
 .swipe-card.top:active { cursor: grabbing; }
 .swipe-card.behind { z-index: 1; transform: scale(0.95) translateY(10px); transition: transform 0.3s ease; pointer-events: none; }
-.swipe-card.promote { transform: scale(1) translateY(0) !important; transition: transform 0.3s ease !important; }
 .swipe-card.exit-left { transition: transform 0.32s ease, opacity 0.32s ease; transform: translateX(-130%) rotate(-18deg) !important; opacity: 0; }
 .swipe-card.exit-right { transition: transform 0.32s ease, opacity 0.32s ease; transform: translateX(130%) rotate(18deg) !important; opacity: 0; }
 .swipe-card.new-top { animation: popIn 0.25s ease; }
 @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-
 .like-stamp { position: absolute; top: 22px; left: 20px; border: 3px solid var(--accent); border-radius: 6px; padding: 3px 10px; font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; opacity: 0; transform: rotate(-12deg); pointer-events: none; }
 .nope-stamp { position: absolute; top: 22px; right: 20px; border: 3px solid var(--red); border-radius: 6px; padding: 3px 10px; font-size: 1rem; font-weight: 700; color: var(--red); letter-spacing: 0.05em; opacity: 0; transform: rotate(12deg); pointer-events: none; }
 .card-type-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; }
@@ -76,17 +88,14 @@ input[type="text"]::placeholder { color: var(--muted); }
 .card-protein { font-size: 0.78rem; color: var(--muted); }
 .card-protein span { color: var(--accent2); }
 .card-preview { font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
-
 .progress-wrap { width: min(340px, 88vw); height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 14px; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
-
 .swipe-actions { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 20px; flex-shrink: 0; }
 .btn-dislike, .btn-like { width: 64px; height: 64px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; background: var(--surface); transition: all 0.18s; }
 .btn-dislike { border-color: var(--red); color: var(--red); }
 .btn-dislike:hover { background: var(--red); color: #fff; transform: scale(1.06); }
 .btn-like { border-color: var(--accent); color: var(--accent); }
 .btn-like:hover { background: var(--accent); color: #0f0f0f; transform: scale(1.06); }
-
 .all-done-panel { display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px 24px; gap: 12px; }
 .all-done-panel h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; }
 .all-done-panel p { color: var(--muted); font-size: 0.88rem; }
@@ -116,7 +125,6 @@ input[type="text"]::placeholder { color: var(--muted); }
 .result-badge { font-size: 0.64rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
 .badge-match { background: #1e2d10; color: var(--accent); border: 1px solid #3a5a1a; }
 .badge-auto { background: #2d1e10; color: var(--accent2); border: 1px solid #5a3a1a; }
-
 .shopping-wrap { margin-top: 28px; }
 .shopping-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .shopping-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; }
@@ -129,6 +137,22 @@ input[type="text"]::placeholder { color: var(--muted); }
 .shopping-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 12px; color: #0f0f0f; font-weight: 700; }
 .item-name { flex: 1; }
 .item-amount { color: var(--accent); font-size: 0.8rem; font-weight: 500; }
+
+/* ---- Meals management ---- */
+.mgmt-wrap { padding: 28px 24px 60px; max-width: 680px; margin: 0 auto; width: 100%; }
+.mgmt-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.mgmt-header h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; }
+.meal-row { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.meal-row-info { flex: 1; }
+.meal-row-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; margin-bottom: 2px; }
+.meal-row-meta { font-size: 0.74rem; color: var(--muted); }
+.import-feedback { padding: 12px 16px; border-radius: 8px; font-size: 0.84rem; margin-bottom: 12px; display: none; }
+.import-feedback.success { background: #1e2d10; border: 1px solid #3a5a1a; color: var(--accent); }
+.import-feedback.error { background: #2d1010; border: 1px solid #5a1a1a; color: var(--red); }
+.template-box { margin-top: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.template-title { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.template-code { background: var(--surface2); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.74rem; color: #aaa; line-height: 1.8; white-space: pre-wrap; overflow-x: auto; }
+.section-label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 28px; display: block; }
 
 /* ---- Modal ---- */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 300; align-items: center; justify-content: center; padding: 24px; }
@@ -154,14 +178,23 @@ input[type="text"]::placeholder { color: var(--muted); }
   .swipe-actions { gap: 20px; }
   .modal { padding: 20px; border-radius: 18px 18px 0 0; max-height: 90vh; }
   .modal-overlay { align-items: flex-end; padding: 0; }
-  .results-wrap { padding: 20px 16px 50px; }
+  .results-wrap, .mgmt-wrap { padding: 20px 16px 50px; }
 }
 </style>
 </head>
 <body>
 
+<!-- Loading -->
+<div id="screen-loading" class="screen active">
+  <div class="loading-wrap">
+    <div class="logo">🥦 Meal Planner</div>
+    <div class="spinner"></div>
+    <div style="color:var(--muted);font-size:0.85rem">Loading meals...</div>
+  </div>
+</div>
+
 <!-- Lobby -->
-<div id="screen-lobby" class="screen active">
+<div id="screen-lobby" class="screen">
   <div class="lobby-wrap">
     <div>
       <div class="logo">🥦 Meal Planner</div>
@@ -179,6 +212,9 @@ input[type="text"]::placeholder { color: var(--muted); }
       <input type="text" id="join-code" placeholder="Session code (e.g. ABC123)" maxlength="10" style="text-transform:uppercase;letter-spacing:0.1em">
       <input type="text" id="join-name" placeholder="Your name" maxlength="20">
       <button class="btn-primary" id="btn-join">Join →</button>
+    </div>
+    <div class="lobby-footer">
+      <button class="btn-ghost" id="btn-manage-meals">Manage meals</button>
     </div>
   </div>
 </div>
@@ -248,6 +284,49 @@ input[type="text"]::placeholder { color: var(--muted); }
   </div>
 </div>
 
+<!-- Meals management -->
+<div id="screen-meals" class="screen">
+  <div class="mgmt-wrap">
+    <div class="mgmt-header">
+      <button class="btn-recipe-sm" id="btn-back-lobby">← Back</button>
+      <h1>Meals</h1>
+    </div>
+
+    <span class="section-label">Current meals (<span id="meal-count">0</span>)</span>
+    <div id="meals-list"></div>
+
+    <span class="section-label" style="margin-top:36px">Add new meals</span>
+    <p style="color:var(--muted);font-size:0.83rem;margin-bottom:14px;line-height:1.6">
+      Ask Claude: <em>"give me 3 vegan dinner ideas in meal planner JSON format"</em> then paste the result below.
+    </p>
+    <div id="import-feedback" class="import-feedback"></div>
+    <textarea id="import-textarea" placeholder="Paste JSON here..."></textarea>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn-primary" id="btn-import">Import meals</button>
+      <button class="btn-secondary" style="width:auto;padding:11px 20px" id="btn-clear-import">Clear</button>
+    </div>
+
+    <div class="template-box">
+      <div class="template-title">JSON format</div>
+      <div class="template-code">[
+  {
+    "id": "unique-id",
+    "name": "Meal Name",
+    "type": "lunch or dinner",
+    "protein": "Main protein source",
+    "ingredients": [
+      { "name": "Ingredient", "amount": "quantity" }
+    ],
+    "steps": [
+      "Step one",
+      "Step two"
+    ]
+  }
+]</div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div id="modal" class="modal-overlay">
   <div class="modal">
@@ -267,8 +346,10 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, getDoc }
-  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+  getFirestore, doc, setDoc, updateDoc, onSnapshot,
+  arrayUnion, getDoc, collection, getDocs, deleteDoc, writeBatch
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const app = initializeApp({
   apiKey: "AIzaSyAEvjmzIh2iaCf0yaelrM5tI1nClrjPw9k",
@@ -280,8 +361,8 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-// ── Meals ──────────────────────────────────────────────────────────────────
-const meals = [
+// ── Seed data (used only if Firestore meals collection is empty) ───────────
+const SEED_MEALS = [
   {
     id: "chickpea-pasta-salad",
     name: "Smoky Chickpea & Roasted Pepper Pasta Salad",
@@ -473,6 +554,7 @@ const meals = [
 ];
 
 // ── State ──────────────────────────────────────────────────────────────────
+let meals = [];
 let sessionId = null;
 let mySlot = null;
 let sessionData = null;
@@ -481,11 +563,40 @@ let swipeIndex = 0;
 let unsub = null;
 let knownMatches = new Set();
 let swiping = false;
-
-// Drag state
 let dragStartX = 0;
 let dragging = false;
 let curDragX = 0;
+
+// ── Init: load meals then show lobby ──────────────────────────────────────
+async function init() {
+  try {
+    await loadMeals();
+  } catch (err) {
+    alert('Failed to load meals: ' + err.message);
+  }
+  const params = new URLSearchParams(location.search);
+  if (params.get('s')) {
+    document.getElementById('join-code').value = params.get('s').toUpperCase();
+    setTimeout(() => document.getElementById('join-name').focus(), 100);
+  }
+  showScreen('screen-lobby');
+}
+
+async function loadMeals() {
+  const snap = await getDocs(collection(db, 'meals'));
+  if (snap.empty) {
+    await seedMeals();
+  } else {
+    meals = snap.docs.map(d => d.data());
+  }
+}
+
+async function seedMeals() {
+  const batch = writeBatch(db);
+  SEED_MEALS.forEach(meal => batch.set(doc(db, 'meals', meal.id), meal));
+  await batch.commit();
+  meals = [...SEED_MEALS];
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function showScreen(id) {
@@ -497,46 +608,25 @@ function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function sessionRef() {
-  return doc(db, 'sessions', sessionId);
-}
-
-function partnerSlot() {
-  return mySlot === 'player1' ? 'player2' : 'player1';
-}
-
-// ── URL param pre-fill ─────────────────────────────────────────────────────
-const params = new URLSearchParams(location.search);
-if (params.get('s')) {
-  document.getElementById('join-code').value = params.get('s').toUpperCase();
-  setTimeout(() => document.getElementById('join-name').focus(), 100);
-}
+function sessionRef() { return doc(db, 'sessions', sessionId); }
+function partnerSlot() { return mySlot === 'player1' ? 'player2' : 'player1'; }
 
 // ── Create session ─────────────────────────────────────────────────────────
 document.getElementById('btn-create').addEventListener('click', async () => {
   const name = document.getElementById('create-name').value.trim();
   if (!name) { alert('Enter your name first'); return; }
-
   const btn = document.getElementById('btn-create');
-  btn.textContent = 'Creating...';
-  btn.disabled = true;
-
+  btn.textContent = 'Creating...'; btn.disabled = true;
   try {
     sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
     mySlot = 'player1';
-
     const order = shuffle(meals).map(m => m.id);
     mealQueue = order;
-
     await setDoc(sessionRef(), {
-      status: 'waiting',
-      createdAt: Date.now(),
+      status: 'waiting', createdAt: Date.now(),
       player1: { name, done: false, swipes: {}, order },
-      player2: null,
-      matches: [],
-      finalWeek: []
+      player2: null, matches: [], finalWeek: []
     });
-
     document.getElementById('display-code').textContent = sessionId;
     const url = location.origin + location.pathname + '?s=' + sessionId;
     document.getElementById('display-url').textContent = url;
@@ -545,8 +635,7 @@ document.getElementById('btn-create').addEventListener('click', async () => {
   } catch (err) {
     alert('Could not create session: ' + err.message);
   } finally {
-    btn.textContent = 'Create week →';
-    btn.disabled = false;
+    btn.textContent = 'Create week →'; btn.disabled = false;
   }
 });
 
@@ -556,29 +645,29 @@ document.getElementById('btn-join').addEventListener('click', async () => {
   const name = document.getElementById('join-name').value.trim();
   if (!code) { alert('Enter a session code'); return; }
   if (!name) { alert('Enter your name'); return; }
-
-  sessionId = code;
-  const snap = await getDoc(sessionRef());
-  if (!snap.exists()) { alert('Session not found — check the code'); return; }
-
-  const data = snap.data();
-  if (data.player2) { alert('This session is already full'); return; }
-
-  mySlot = 'player2';
-  const order = shuffle(meals).map(m => m.id);
-  mealQueue = order;
-
-  await updateDoc(sessionRef(), {
-    'player2.name': name,
-    'player2.done': false,
-    'player2.swipes': {},
-    'player2.order': order,
-    status: 'swiping'
-  });
-
-  subscribeSession();
-  showScreen('screen-swipe');
-  renderCard();
+  const btn = document.getElementById('btn-join');
+  btn.textContent = 'Joining...'; btn.disabled = true;
+  try {
+    sessionId = code;
+    const snap = await getDoc(sessionRef());
+    if (!snap.exists()) { alert('Session not found — check the code'); return; }
+    const data = snap.data();
+    if (data.player2) { alert('This session is already full'); return; }
+    mySlot = 'player2';
+    const order = shuffle(meals).map(m => m.id);
+    mealQueue = order;
+    await updateDoc(sessionRef(), {
+      'player2.name': name, 'player2.done': false,
+      'player2.swipes': {}, 'player2.order': order, status: 'swiping'
+    });
+    subscribeSession();
+    showScreen('screen-swipe');
+    renderCard();
+  } catch (err) {
+    alert('Could not join: ' + err.message);
+  } finally {
+    btn.textContent = 'Join →'; btn.disabled = false;
+  }
 });
 
 // ── Copy link ──────────────────────────────────────────────────────────────
@@ -602,21 +691,14 @@ function subscribeSession() {
 }
 
 function onUpdate(data) {
-  // Transition from waiting → swiping
   if (data.status === 'swiping' && document.querySelector('.screen.active')?.id === 'screen-waiting') {
     showScreen('screen-swipe');
     renderCard();
   }
+  if (data.status === 'complete') { showResults(data); return; }
 
-  if (data.status === 'complete') {
-    showResults(data);
-    return;
-  }
-
-  // Update match count
   document.getElementById('match-count').textContent = data.matches.length;
 
-  // Toast new matches
   (data.matches || []).forEach(id => {
     if (!knownMatches.has(id)) {
       knownMatches.add(id);
@@ -625,7 +707,6 @@ function onUpdate(data) {
     }
   });
 
-  // Partner status
   const partner = data[partnerSlot()];
   const el = document.getElementById('partner-status');
   if (!partner) {
@@ -637,10 +718,8 @@ function onUpdate(data) {
       : `<span>${partner.name}</span> has swiped ${count} / ${meals.length}`;
   }
 
-  // Reconcile any missed matches (race condition safety net)
   reconcileMatches(data);
 
-  // Both done → finalize (player1 only to avoid double-write)
   if (data.player1?.done && data.player2?.done && data.status === 'swiping' && mySlot === 'player1') {
     finalizeWeek(data);
   }
@@ -652,14 +731,12 @@ function reconcileMatches(data) {
   const missing = meals
     .filter(m => p1[m.id] === true && p2[m.id] === true && !(data.matches || []).includes(m.id))
     .map(m => m.id);
-  if (missing.length) {
-    updateDoc(sessionRef(), { matches: arrayUnion(...missing) });
-  }
+  if (missing.length) updateDoc(sessionRef(), { matches: arrayUnion(...missing) });
 }
 
 async function finalizeWeek(data) {
-  const matches = data.matches || [];
-  let final = [...matches];
+  const matched = data.matches || [];
+  let final = [...matched];
   if (final.length < 7) {
     const pool = shuffle(meals.filter(m => !final.includes(m.id)));
     final = [...final, ...pool.slice(0, 7 - final.length).map(m => m.id)];
@@ -671,27 +748,15 @@ async function finalizeWeek(data) {
 function renderCard() {
   const topEl = document.getElementById('card-top');
   const behindEl = document.getElementById('card-behind');
-
-  if (swipeIndex >= mealQueue.length) {
-    showAllDone();
-    return;
-  }
-
+  if (swipeIndex >= mealQueue.length) { showAllDone(); return; }
   const meal = meals.find(m => m.id === mealQueue[swipeIndex]);
-  const next = swipeIndex + 1 < mealQueue.length
-    ? meals.find(m => m.id === mealQueue[swipeIndex + 1]) : null;
-
+  const next = swipeIndex + 1 < mealQueue.length ? meals.find(m => m.id === mealQueue[swipeIndex + 1]) : null;
   fillCard(topEl, meal, true);
-  if (next) fillCard(behindEl, next, false);
-  else behindEl.innerHTML = '';
-
+  if (next) fillCard(behindEl, next, false); else behindEl.innerHTML = '';
   topEl.className = 'swipe-card top new-top';
   topEl.style.transform = '';
   behindEl.className = 'swipe-card behind';
-
-  document.getElementById('progress-fill').style.width =
-    (swipeIndex / mealQueue.length * 100) + '%';
-
+  document.getElementById('progress-fill').style.width = (swipeIndex / mealQueue.length * 100) + '%';
   setupDrag(topEl);
 }
 
@@ -705,7 +770,7 @@ function fillCard(el, meal, isTop) {
   `;
 }
 
-// ── Drag / swipe ───────────────────────────────────────────────────────────
+// ── Drag ───────────────────────────────────────────────────────────────────
 function setupDrag(card) {
   card.addEventListener('mousedown', startDrag);
   card.addEventListener('touchstart', startDrag, { passive: true });
@@ -713,10 +778,8 @@ function setupDrag(card) {
 
 function startDrag(e) {
   if (swiping) return;
-  dragging = true;
-  curDragX = 0;
-  const pt = e.touches ? e.touches[0] : e;
-  dragStartX = pt.clientX;
+  dragging = true; curDragX = 0;
+  dragStartX = (e.touches ? e.touches[0] : e).clientX;
   document.addEventListener('mousemove', moveDrag);
   document.addEventListener('mouseup', endDrag);
   document.addEventListener('touchmove', moveDrag, { passive: false });
@@ -726,8 +789,7 @@ function startDrag(e) {
 function moveDrag(e) {
   if (!dragging) return;
   if (e.cancelable) e.preventDefault();
-  const pt = e.touches ? e.touches[0] : e;
-  curDragX = pt.clientX - dragStartX;
+  curDragX = (e.touches ? e.touches[0] : e).clientX - dragStartX;
   const card = document.getElementById('card-top');
   card.style.transform = `translateX(${curDragX}px) rotate(${curDragX * 0.06}deg)`;
   const pct = Math.min(Math.abs(curDragX) / 90, 1);
@@ -744,7 +806,6 @@ function endDrag() {
   document.removeEventListener('mouseup', endDrag);
   document.removeEventListener('touchmove', moveDrag);
   document.removeEventListener('touchend', endDrag);
-
   if (curDragX > 80) doSwipe('like');
   else if (curDragX < -80) doSwipe('dislike');
   else {
@@ -762,47 +823,27 @@ function endDrag() {
 async function doSwipe(direction) {
   if (swiping || swipeIndex >= mealQueue.length) return;
   swiping = true;
-
   const mealId = mealQueue[swipeIndex];
   const liked = direction === 'like';
   const card = document.getElementById('card-top');
-
-  // Show stamp fully
   const stamp = liked ? document.getElementById('like-stamp') : document.getElementById('nope-stamp');
   if (stamp) stamp.style.opacity = 1;
-
-  // Animate out
-  card.style.transition = '';
   card.classList.add(liked ? 'exit-right' : 'exit-left');
-
-  // Promote behind card
-  const behind = document.getElementById('card-behind');
-  behind.classList.add('promote');
-
-  // Write to Firestore
+  document.getElementById('card-behind').classList.add('promote');
   const updates = { [`${mySlot}.swipes.${mealId}`]: liked };
   swipeIndex++;
   if (swipeIndex >= mealQueue.length) updates[`${mySlot}.done`] = true;
-  if (liked && sessionData?.[partnerSlot()]?.swipes?.[mealId] === true) {
-    updates.matches = arrayUnion(mealId);
-  }
+  if (liked && sessionData?.[partnerSlot()]?.swipes?.[mealId] === true) updates.matches = arrayUnion(mealId);
   await updateDoc(sessionRef(), updates);
-
-  setTimeout(() => {
-    swiping = false;
-    renderCard();
-  }, 340);
+  setTimeout(() => { swiping = false; renderCard(); }, 340);
 }
 
-// ── Button swipe triggers ──────────────────────────────────────────────────
 document.getElementById('btn-like').addEventListener('click', () => doSwipe('like'));
 document.getElementById('btn-dislike').addEventListener('click', () => doSwipe('dislike'));
-
 document.getElementById('btn-view-recipe').addEventListener('click', () => {
   if (swipeIndex < mealQueue.length) openModal(mealQueue[swipeIndex]);
 });
 
-// ── All done panel ─────────────────────────────────────────────────────────
 function showAllDone() {
   document.getElementById('swipe-main').style.display = 'none';
   document.getElementById('all-done-panel').style.display = 'flex';
@@ -822,28 +863,22 @@ function showResults(data) {
   const final = data.finalWeek || [];
   const matched = final.filter(id => (data.matches || []).includes(id));
   const auto = final.filter(id => !(data.matches || []).includes(id));
-
   document.getElementById('results-sub').textContent =
     `${matched.length} matched + ${auto.length} auto-picked to complete your week`;
-
   const el = document.getElementById('results-meals');
   el.innerHTML = '';
-
   if (matched.length) {
     const lbl = document.createElement('div');
-    lbl.className = 'result-section-label';
-    lbl.textContent = '❤️ Matched';
+    lbl.className = 'result-section-label'; lbl.textContent = '❤️ Matched';
     el.appendChild(lbl);
     matched.forEach(id => el.appendChild(makeResultCard(id, 'matched')));
   }
   if (auto.length) {
     const lbl = document.createElement('div');
-    lbl.className = 'result-section-label';
-    lbl.textContent = '🎲 Auto-picked';
+    lbl.className = 'result-section-label'; lbl.textContent = '🎲 Auto-picked';
     el.appendChild(lbl);
     auto.forEach(id => el.appendChild(makeResultCard(id, 'auto')));
   }
-
   renderShoppingList(final);
 }
 
@@ -889,7 +924,6 @@ function renderShoppingList(mealIds) {
         by[cat].push({ name: ing.name, amount: ing.amount });
     });
   });
-
   const el = document.getElementById('shopping-sections');
   el.innerHTML = '';
   const cats = AISLE_ORDER.filter(c => by[c]);
@@ -898,14 +932,11 @@ function renderShoppingList(mealIds) {
     const sec = document.createElement('div');
     sec.className = 'shopping-section';
     const title = document.createElement('div');
-    title.className = 'shopping-section-title';
-    title.textContent = cat;
+    title.className = 'shopping-section-title'; title.textContent = cat;
     sec.appendChild(title);
     by[cat].forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'shopping-item';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
+      const row = document.createElement('div'); row.className = 'shopping-item';
+      const cb = document.createElement('input'); cb.type = 'checkbox';
       cb.addEventListener('change', () => row.classList.toggle('checked', cb.checked));
       const nm = document.createElement('span'); nm.className = 'item-name'; nm.textContent = item.name;
       const am = document.createElement('span'); am.className = 'item-amount'; am.textContent = item.amount;
@@ -943,14 +974,91 @@ document.getElementById('btn-copy-shopping').addEventListener('click', () => {
 document.getElementById('btn-new-week').addEventListener('click', () => {
   if (unsub) unsub();
   sessionId = null; mySlot = null; sessionData = null;
-  mealQueue = []; swipeIndex = 0; knownMatches = new Set(); swiping = false;
-  shoppingOpen = false;
+  mealQueue = []; swipeIndex = 0; knownMatches = new Set(); swiping = false; shoppingOpen = false;
   document.getElementById('swipe-main').style.display = 'flex';
   document.getElementById('all-done-panel').style.display = 'none';
   document.getElementById('shopping-wrap').style.display = 'none';
   document.getElementById('btn-toggle-shopping').textContent = '🛒 Shopping list';
   history.pushState({}, '', location.pathname);
   showScreen('screen-lobby');
+});
+
+// ── Meal management ────────────────────────────────────────────────────────
+document.getElementById('btn-manage-meals').addEventListener('click', () => {
+  renderMealsList();
+  showScreen('screen-meals');
+});
+
+document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('screen-lobby'));
+
+function renderMealsList() {
+  const el = document.getElementById('meals-list');
+  el.innerHTML = '';
+  document.getElementById('meal-count').textContent = meals.length;
+  const sorted = [...meals].sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+  sorted.forEach(meal => {
+    const row = document.createElement('div');
+    row.className = 'meal-row';
+    row.innerHTML = `
+      <div class="meal-row-info">
+        <div class="meal-row-name">${meal.name}</div>
+        <div class="meal-row-meta">${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} · ${meal.protein}</div>
+      </div>
+      <button class="btn-recipe-sm" data-id="${meal.id}">Recipe</button>
+      <button class="btn-danger" data-id="${meal.id}">Delete</button>
+    `;
+    row.querySelector('.btn-recipe-sm').addEventListener('click', () => openModal(meal.id));
+    row.querySelector('.btn-danger').addEventListener('click', () => confirmDelete(meal.id, meal.name));
+    el.appendChild(row);
+  });
+}
+
+async function confirmDelete(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  try {
+    await deleteDoc(doc(db, 'meals', id));
+    meals = meals.filter(m => m.id !== id);
+    renderMealsList();
+  } catch (err) {
+    alert('Could not delete: ' + err.message);
+  }
+}
+
+document.getElementById('btn-import').addEventListener('click', async () => {
+  const raw = document.getElementById('import-textarea').value.trim();
+  const feedback = document.getElementById('import-feedback');
+  const btn = document.getElementById('btn-import');
+  btn.textContent = 'Importing...'; btn.disabled = true;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error('Must be a JSON array');
+    parsed.forEach(meal => {
+      if (!meal.id || !meal.name || !meal.type || !meal.ingredients || !meal.steps)
+        throw new Error(`"${meal.name || 'unknown'}" is missing required fields`);
+    });
+    const batch = writeBatch(db);
+    parsed.forEach(meal => batch.set(doc(db, 'meals', meal.id), meal));
+    await batch.commit();
+    await loadMeals();
+    renderMealsList();
+    document.getElementById('import-textarea').value = '';
+    feedback.className = 'import-feedback success';
+    feedback.textContent = `✓ Imported ${parsed.length} meal${parsed.length !== 1 ? 's' : ''} successfully.`;
+    feedback.style.display = 'block';
+    setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+  } catch (err) {
+    feedback.className = 'import-feedback error';
+    feedback.textContent = 'Import failed: ' + err.message;
+    feedback.style.display = 'block';
+  } finally {
+    btn.textContent = 'Import meals'; btn.disabled = false;
+  }
+});
+
+document.getElementById('btn-clear-import').addEventListener('click', () => {
+  document.getElementById('import-textarea').value = '';
+  const fb = document.getElementById('import-feedback');
+  fb.style.display = 'none';
 });
 
 // ── Recipe modal ───────────────────────────────────────────────────────────
@@ -973,17 +1081,17 @@ function openModal(id) {
   document.getElementById('modal').classList.add('open');
 }
 
-document.getElementById('modal-close').addEventListener('click', () => {
-  document.getElementById('modal').classList.remove('open');
-});
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
 document.getElementById('modal').addEventListener('click', e => {
   if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
 });
 
-// ── Enter key shortcuts ────────────────────────────────────────────────────
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────
 document.getElementById('create-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-create').click(); });
 document.getElementById('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('join-name').focus(); });
 document.getElementById('join-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-join').click(); });
+
+init();
 </script>
 </body>
 </html>
