@@ -1618,6 +1618,47 @@ async function loadAdminSessions() {
   }
 }
 
+async function adminFinalizeSession(sid, data) {
+  // Re-fetch to get latest swipes
+  const snap = await getDoc(doc(db, 'sessions', sid));
+  const d = snap.data();
+  const t = d.targets || { lunch: 1, dinner: 6 };
+
+  // Reconcile any missing matches from both players' swipes
+  const p1 = d.player1 || {}, p2 = d.player2 || {};
+  const allMeals = meals.length ? meals : SEED_MEALS;
+  const missingLunch = allMeals.filter(m => m.type==='lunch' && p1.lunchSwipes?.[m.id]===true && p2.lunchSwipes?.[m.id]===true && !(d.lunchMatches||[]).includes(m.id)).map(m=>m.id);
+  const missingDinner = allMeals.filter(m => m.type==='dinner' && p1.dinnerSwipes?.[m.id]===true && p2.dinnerSwipes?.[m.id]===true && !(d.dinnerMatches||[]).includes(m.id)).map(m=>m.id);
+  const reconcile = {};
+  if (missingLunch.length) reconcile.lunchMatches = arrayUnion(...missingLunch);
+  if (missingDinner.length) reconcile.dinnerMatches = arrayUnion(...missingDinner);
+  if (Object.keys(reconcile).length) await updateDoc(doc(db, 'sessions', sid), reconcile);
+
+  // Re-fetch after reconcile
+  const snap2 = await getDoc(doc(db, 'sessions', sid));
+  const d2 = snap2.data();
+
+  function pick(matched, pool, target) {
+    let final = [...matched];
+    if (final.length > target) final = shuffle(final).slice(0, target);
+    else if (final.length < target) {
+      const fill = shuffle(pool.filter(id => !final.includes(id)));
+      final = [...final, ...fill.slice(0, target - final.length)];
+    }
+    return final;
+  }
+
+  const lunchPool = allMeals.filter(m=>m.type==='lunch').map(m=>m.id);
+  const dinnerPool = allMeals.filter(m=>m.type==='dinner').map(m=>m.id);
+  const finalLunch = pick(d2.lunchMatches||[], lunchPool, t.lunch);
+  const finalDinner = pick(d2.dinnerMatches||[], dinnerPool, t.dinner);
+
+  await updateDoc(doc(db, 'sessions', sid), {
+    finalWeek: [...finalLunch, ...finalDinner],
+    status: 'complete'
+  });
+}
+
 function buildSessionCard(s) {
   const card = document.createElement('div');
   card.className = 'session-card';
@@ -1729,6 +1770,19 @@ function buildSessionCard(s) {
     viewBtn.textContent = 'View results';
     viewBtn.addEventListener('click', () => { sessionId = s.id; showResults(s); });
     foot.appendChild(viewBtn);
+  }
+  if (s.status === 'lunch' || s.status === 'dinner') {
+    const finalBtn = document.createElement('button');
+    finalBtn.className = 'btn-sm';
+    finalBtn.textContent = 'Force finalize';
+    finalBtn.addEventListener('click', async () => {
+      finalBtn.textContent = 'Finalizing…'; finalBtn.disabled = true;
+      try {
+        await adminFinalizeSession(s.id, s);
+        await loadAdminSessions();
+      } catch(err) { alert('Failed: ' + err.message); finalBtn.textContent = 'Force finalize'; finalBtn.disabled = false; }
+    });
+    foot.appendChild(finalBtn);
   }
   const delBtn = document.createElement('button');
   delBtn.className = 'btn-danger';
