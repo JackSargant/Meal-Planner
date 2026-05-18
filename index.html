@@ -925,7 +925,7 @@ function buildDeck(type, target, excludedIds = []) {
   const pool = meals.filter(m => m.type === type && !excludedIds.includes(m.id));
   const fallback = meals.filter(m => m.type === type); // if exclusions wipe the pool
   const available = pool.length >= target ? pool : fallback;
-  const cap = type === 'lunch' ? Math.max(target + 4, 5) : Math.max(target + 8, 10);
+  const cap = type === 'lunch' ? Math.max(target + 4, 5) : Math.max(target + 12, 10);
   return shuffle(available).slice(0, cap).map(m => m.id);
 }
 
