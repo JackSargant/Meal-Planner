@@ -920,6 +920,15 @@ function partnerSlot() { return mySlot === 'player1' ? 'player2' : 'player1'; }
 function lunchMeals() { return meals.filter(m => m.type === 'lunch'); }
 function dinnerMeals() { return meals.filter(m => m.type === 'dinner'); }
 
+// Build a capped, de-duped deck — excludes last week's meals, limits size
+function buildDeck(type, target, excludedIds = []) {
+  const pool = meals.filter(m => m.type === type && !excludedIds.includes(m.id));
+  const fallback = meals.filter(m => m.type === type); // if exclusions wipe the pool
+  const available = pool.length >= target ? pool : fallback;
+  const cap = type === 'lunch' ? Math.max(target + 4, 5) : Math.max(target + 8, 10);
+  return shuffle(available).slice(0, cap).map(m => m.id);
+}
+
 // ── Create session ────────────────────────────────────────────────────────
 document.getElementById('btn-create').addEventListener('click', async () => {
   const name = document.getElementById('create-name').value.trim();
@@ -929,11 +938,13 @@ document.getElementById('btn-create').addEventListener('click', async () => {
   try {
     sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
     mySlot = 'player1';
-    const lo = shuffle(lunchMeals()).map(m => m.id);
-    const ddo = shuffle(dinnerMeals()).map(m => m.id);
+    const excluded = JSON.parse(localStorage.getItem('lastWeekMeals') || '[]');
+    const lo  = buildDeck('lunch',  lunchTarget,  excluded);
+    const ddo = buildDeck('dinner', dinnerTarget, excluded);
     await setDoc(sessionRef(), {
       status: 'waiting', createdAt: Date.now(),
       targets: { lunch: lunchTarget, dinner: dinnerTarget },
+      excludedMealIds: excluded,
       player1: { name, lunchDone: false, dinnerDone: false, lunchSwipes: {}, dinnerSwipes: {}, lunchOrder: lo, dinnerOrder: ddo },
       player2: null, lunchMatches: [], dinnerMatches: [], finalWeek: []
     });
@@ -960,8 +971,9 @@ document.getElementById('btn-join').addEventListener('click', async () => {
     const data = snap.data();
     if (data.player2) { alert('This session is already full'); return; }
     mySlot = 'player2';
-    const lo = shuffle(lunchMeals()).map(m => m.id);
-    const ddo = shuffle(dinnerMeals()).map(m => m.id);
+    const excluded = data.excludedMealIds || [];
+    const lo  = buildDeck('lunch',  data.targets?.lunch  ?? 1, excluded);
+    const ddo = buildDeck('dinner', data.targets?.dinner ?? 6, excluded);
     await updateDoc(sessionRef(), {
       'player2.name': name, 'player2.lunchDone': false, 'player2.dinnerDone': false,
       'player2.lunchSwipes': {}, 'player2.dinnerSwipes': {},
@@ -1273,6 +1285,7 @@ function showResults(data) {
     history.pushState({}, '', location.origin + location.pathname + '?view=' + sessionId);
   }
   const final = data.finalWeek || [];
+  if (final.length) localStorage.setItem('lastWeekMeals', JSON.stringify(final));
   const lunchFinal  = final.filter(id => meals.find(m => m.id === id)?.type === 'lunch');
   const dinnerFinal = final.filter(id => meals.find(m => m.id === id)?.type === 'dinner');
   const lm = new Set(data.lunchMatches || []);
